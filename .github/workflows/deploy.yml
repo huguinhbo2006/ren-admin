@@ -29,24 +29,24 @@ jobs:
       - name: Ensure Target Directory Exists on Hostinger
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          port: ${{ secrets.HOSTINGER_SSH_PORT }}
-          username: ${{ secrets.HOSTINGER_SSH_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          host: ${{ secrets.HOSTINGER_SSH_HOST || '195.35.39.62' }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT || '65002' }}
+          username: ${{ secrets.HOSTINGER_SSH_USER || 'u111559603' }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY || secrets.ssh_key || secrets.SSH_KEY }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD || secrets.password || 'Cruzazul29.$' }}
           script: |
-            mkdir -p ${{ secrets.HOSTINGER_ADMIN_PATH }}
+            mkdir -p ${{ secrets.HOSTINGER_ADMIN_PATH || '/home/u111559603/domains/ren-admin.faceaut.com/public_html' }}
 
       - name: Deploy Compiled Files via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          port: ${{ secrets.HOSTINGER_SSH_PORT }}
-          username: ${{ secrets.HOSTINGER_SSH_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          host: ${{ secrets.HOSTINGER_SSH_HOST || '195.35.39.62' }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT || '65002' }}
+          username: ${{ secrets.HOSTINGER_SSH_USER || 'u111559603' }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY || secrets.ssh_key || secrets.SSH_KEY }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD || secrets.password || 'Cruzazul29.$' }}
           source: "dist/admin/browser/*"
-          target: ${{ secrets.HOSTINGER_ADMIN_PATH }}
+          target: ${{ secrets.HOSTINGER_ADMIN_PATH || '/home/u111559603/domains/ren-admin.faceaut.com/public_html' }}
           strip_prefix: "dist/admin/browser"
           rm: true
           timeout: 120s
