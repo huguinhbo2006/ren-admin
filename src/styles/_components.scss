@@ -17,12 +17,7 @@
 .rm-content-area {
   flex: 1;
   min-width: 0;
-  margin-left: var(--rm-sidebar-width);
-  transition: margin-left 0.28s ease;
-
-  &.sidebar-collapsed {
-    margin-left: var(--rm-sidebar-width-sm);
-  }
+  margin-left: 0;
 }
 
 // ---------------------------------------------------------------------------
