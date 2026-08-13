@@ -26,6 +26,11 @@ jobs:
       - name: Build Production Bundle
         run: npm run build -- --configuration=production
 
+      - name: Package Browser Build Contents
+        run: |
+          cd dist/admin/browser
+          tar -czf ../../../admin-dist.tar.gz .
+
       - name: Ensure Target Directory Exists on Hostinger
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -37,7 +42,7 @@ jobs:
           script: |
             mkdir -p /home/u111559603/domains/faceaut.com/public_html/ren-admin
 
-      - name: Deploy Compiled Files via SCP
+      - name: Upload Package Archive via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOSTINGER_SSH_HOST || '195.35.39.62' }}
@@ -45,9 +50,20 @@ jobs:
           username: ${{ secrets.HOSTINGER_SSH_USER || 'u111559603' }}
           key: ${{ secrets.HOSTINGER_SSH_KEY || secrets.ssh_key || secrets.SSH_KEY }}
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD || secrets.password || 'Cruzazul29.$' }}
-          source: "dist/admin/browser/*"
+          source: "admin-dist.tar.gz"
           target: "/home/u111559603/domains/faceaut.com/public_html/ren-admin"
-          strip_prefix: "dist/admin/browser"
-          rm: true
           timeout: 120s
-          command_timeout: 10m
+
+      - name: Extract Build Package directly into ren-admin root
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST || '195.35.39.62' }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT || '65002' }}
+          username: ${{ secrets.HOSTINGER_SSH_USER || 'u111559603' }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY || secrets.ssh_key || secrets.SSH_KEY }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD || secrets.password || 'Cruzazul29.$' }}
+          script: |
+            cd /home/u111559603/domains/faceaut.com/public_html/ren-admin
+            tar -xzf admin-dist.tar.gz
+            rm -f admin-dist.tar.gz
+            echo "✅ ¡Archivos compilados desempacados directamente en la raíz del subdominio!"
