@@ -1,6 +1,9 @@
-# Admin
+# 🖥️ Rentame Admin - Panel Web de Administración (Angular 19)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.7.
+![Deploy Admin to Hostinger](https://github.com/huguinhbo2006/ren-admin/actions/workflows/deploy.yml/badge.svg)
+
+Panel Web de Administración para la gestión de rentas, activos, clientes, pagos y reportes de **Rentame**.
+
 
 ## Development server
 
