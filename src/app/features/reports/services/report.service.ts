@@ -47,6 +47,42 @@ export interface AssetUtilizationReport {
   }[];
 }
 
+export interface AssetRoiReport {
+  total_assets: number;
+  total_revenue_cents: number;
+  total_expense_cents: number;
+  total_net_profit_cents: number;
+  items: {
+    id: number;
+    name: string;
+    serial_number: string;
+    category_name: string;
+    status: string;
+    daily_rate_cents: number;
+    rentals_count: number;
+    total_days_rented: number;
+    total_revenue_cents: number;
+    total_expense_cents: number;
+    net_profit_cents: number;
+    roi_margin_pct: number;
+  }[];
+}
+
+export interface AssetDemandReport {
+  items: {
+    id: number;
+    name: string;
+    serial_number: string;
+    category_name: string;
+    daily_rate_cents: number;
+    rentals_count: number;
+    days_rented: number;
+    demand_status: 'high' | 'medium' | 'low';
+    demand_label: string;
+    demand_class: string;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private readonly http = inject(HttpClient);
@@ -55,6 +91,8 @@ export class ReportService {
   readonly balance = signal<BalanceReport | null>(null);
   readonly receivable = signal<AccountsReceivableReport | null>(null);
   readonly utilization = signal<AssetUtilizationReport | null>(null);
+  readonly assetRoi = signal<AssetRoiReport | null>(null);
+  readonly assetDemand = signal<AssetDemandReport | null>(null);
   readonly loading = signal(false);
 
   loadBalance(dateFrom?: string, dateTo?: string): Observable<ApiResponse<BalanceReport>> {
@@ -90,6 +128,26 @@ export class ReportService {
     return this.http.get<ApiResponse<AssetUtilizationReport>>(`${this.api}/asset-utilization`, { params }).pipe(
       tap((res) => {
         this.utilization.set(res.data);
+        this.loading.set(false);
+      }),
+    );
+  }
+
+  loadAssetRoi(): Observable<ApiResponse<AssetRoiReport>> {
+    this.loading.set(true);
+    return this.http.get<ApiResponse<AssetRoiReport>>(`${this.api}/asset-roi`).pipe(
+      tap((res) => {
+        this.assetRoi.set(res.data);
+        this.loading.set(false);
+      }),
+    );
+  }
+
+  loadAssetDemand(): Observable<ApiResponse<AssetDemandReport>> {
+    this.loading.set(true);
+    return this.http.get<ApiResponse<AssetDemandReport>>(`${this.api}/asset-demand`).pipe(
+      tap((res) => {
+        this.assetDemand.set(res.data);
         this.loading.set(false);
       }),
     );

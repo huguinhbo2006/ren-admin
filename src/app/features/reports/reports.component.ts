@@ -18,11 +18,13 @@ export class ReportsComponent implements OnInit {
   readonly reportService = inject(ReportService);
   readonly authService = inject(AuthService);
 
-  readonly activeTab = signal<'balance' | 'receivable' | 'utilization'>('balance');
+  readonly activeTab = signal<'balance' | 'receivable' | 'utilization' | 'roi' | 'demand'>('balance');
   readonly loading = this.reportService.loading;
   readonly balance = this.reportService.balance;
   readonly receivable = this.reportService.receivable;
   readonly utilization = this.reportService.utilization;
+  readonly assetRoi = this.reportService.assetRoi;
+  readonly assetDemand = this.reportService.assetDemand;
 
   readonly dateFrom = signal<string>(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
   readonly dateTo = signal<string>(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]);
@@ -33,7 +35,7 @@ export class ReportsComponent implements OnInit {
     }
   }
 
-  setTab(tab: 'balance' | 'receivable' | 'utilization'): void {
+  setTab(tab: 'balance' | 'receivable' | 'utilization' | 'roi' | 'demand'): void {
     this.activeTab.set(tab);
     this.loadActiveReport();
   }
@@ -53,6 +55,10 @@ export class ReportsComponent implements OnInit {
       this.reportService.loadReceivable().subscribe();
     } else if (tab === 'utilization') {
       this.reportService.loadUtilization(from, to).subscribe();
+    } else if (tab === 'roi') {
+      this.reportService.loadAssetRoi().subscribe();
+    } else if (tab === 'demand') {
+      this.reportService.loadAssetDemand().subscribe();
     }
   }
 

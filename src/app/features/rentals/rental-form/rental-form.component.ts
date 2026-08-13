@@ -6,6 +6,7 @@ import { RentalService } from '../services/rental.service';
 import { AssetService } from '../../assets/services/asset.service';
 import { CustomerService } from '../../customers/services/customer.service';
 import { ExtraServiceService } from '../services/extra-service.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { CurrencyMxnPipe } from '../../../shared/pipes/currency-mxn.pipe';
 import type { Asset, Customer, ExtraService } from '../../../shared/models';
 
@@ -23,6 +24,7 @@ export class RentalFormComponent implements OnInit {
   private readonly assetService = inject(AssetService);
   private readonly customerService = inject(CustomerService);
   private readonly extraService = inject(ExtraServiceService);
+  readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly customers = this.customerService.customers;
@@ -32,14 +34,18 @@ export class RentalFormComponent implements OnInit {
   readonly saving = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
-  readonly selectedAsset = signal<Asset | null>(null);
+  readonly selectedAssetIds = signal<number[]>([]);
+  readonly selectedAssets = computed(() => {
+    const ids = this.selectedAssetIds();
+    return this.assets().filter((a) => ids.includes(a.id));
+  });
+
   readonly rentalDays = signal<number>(1);
   readonly baseAmountCents = signal<number>(0);
   readonly extrasTotalCents = signal<number>(0);
 
   readonly rentalForm: FormGroup = this.fb.group({
     customer_id: [null, [Validators.required]],
-    asset_id: [null, [Validators.required]],
     start_date: [new Date().toISOString().split('T')[0], [Validators.required]],
     end_date: [new Date().toISOString().split('T')[0], [Validators.required]],
     deposit: [0, [Validators.min(0)]],
@@ -59,19 +65,25 @@ export class RentalFormComponent implements OnInit {
     this.assetService.loadAssets({ status: 'available' }).subscribe();
     this.extraService.loadServices().subscribe();
 
-    this.rentalForm.get('asset_id')?.valueChanges.subscribe((assetId) => {
-      if (assetId) {
-        const found = this.assets().find((a) => a.id === parseInt(assetId, 10)) || null;
-        this.selectedAsset.set(found);
-        if (found && found.deposit_cents) {
-          this.rentalForm.patchValue({ deposit: found.deposit_cents / 100 });
-        }
-        this.recalculateRates();
-      }
-    });
-
     this.rentalForm.get('start_date')?.valueChanges.subscribe(() => this.recalculateRates());
     this.rentalForm.get('end_date')?.valueChanges.subscribe(() => this.recalculateRates());
+  }
+
+  toggleAssetSelection(asset: Asset, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    const current = this.selectedAssetIds();
+
+    if (isChecked) {
+      if (current.length >= 1 && !this.authService.isPro()) {
+        (event.target as HTMLInputElement).checked = false;
+        alert('El Plan Gratuito permite solo 1 activo por contrato de renta.\n\n¡Actualiza al Plan Pro para rentar múltiples activos en un solo paquete o combo (ej. Salón + Inflable + Meseros)!');
+        return;
+      }
+      this.selectedAssetIds.set([...current, asset.id]);
+    } else {
+      this.selectedAssetIds.set(current.filter((id) => id !== asset.id));
+    }
+    this.recalculateRates();
   }
 
   get extrasArray(): FormArray {
@@ -115,9 +127,12 @@ export class RentalFormComponent implements OnInit {
   private recalculateRates(): void {
     const startStr = this.rentalForm.get('start_date')?.value;
     const endStr = this.rentalForm.get('end_date')?.value;
-    const asset = this.selectedAsset();
+    const selected = this.selectedAssets();
 
-    if (!startStr || !endStr || !asset) return;
+    if (!startStr || !endStr || selected.length === 0) {
+      this.baseAmountCents.set(0);
+      return;
+    }
 
     const start = new Date(startStr);
     const end = new Date(endStr);
@@ -126,21 +141,30 @@ export class RentalFormComponent implements OnInit {
 
     this.rentalDays.set(diffDays);
 
-    let base = asset.daily_rate_cents * diffDays;
-    if (asset.monthly_rate_cents && diffDays >= 30) {
-      const months = Math.floor(diffDays / 30);
-      const remDays = diffDays % 30;
-      base = (months * asset.monthly_rate_cents) + (remDays * asset.daily_rate_cents);
-    } else if (asset.weekly_rate_cents && diffDays >= 7) {
-      const weeks = Math.floor(diffDays / 7);
-      const remDays = diffDays % 7;
-      base = (weeks * asset.weekly_rate_cents) + (remDays * asset.daily_rate_cents);
+    let totalBase = 0;
+    for (const asset of selected) {
+      let base = asset.daily_rate_cents * diffDays;
+      if (asset.monthly_rate_cents && diffDays >= 30) {
+        const months = Math.floor(diffDays / 30);
+        const remDays = diffDays % 30;
+        base = (months * asset.monthly_rate_cents) + (remDays * asset.daily_rate_cents);
+      } else if (asset.weekly_rate_cents && diffDays >= 7) {
+        const weeks = Math.floor(diffDays / 7);
+        const remDays = diffDays % 7;
+        base = (weeks * asset.weekly_rate_cents) + (remDays * asset.daily_rate_cents);
+      }
+      totalBase += base;
     }
 
-    this.baseAmountCents.set(base);
+    this.baseAmountCents.set(totalBase);
   }
 
   onSubmit(): void {
+    if (this.selectedAssetIds().length === 0) {
+      this.errorMessage.set('Debes seleccionar al menos un activo para el contrato.');
+      return;
+    }
+
     if (this.rentalForm.invalid || this.saving()) {
       this.rentalForm.markAllAsTouched();
       return;
@@ -156,9 +180,11 @@ export class RentalFormComponent implements OnInit {
       unit_price_cents: ctrl.get('unit_price_cents')?.value,
     }));
 
+    const assetIds = this.selectedAssetIds();
     const payload = {
       customer_id: parseInt(fv.customer_id, 10),
-      asset_id: parseInt(fv.asset_id, 10),
+      asset_id: assetIds[0],
+      asset_ids: assetIds,
       start_date: fv.start_date,
       end_date: fv.end_date,
       deposit_cents: Math.round(parseFloat(fv.deposit || 0) * 100),

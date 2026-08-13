@@ -1,13 +1,13 @@
-<div class="container-fluid py-4 rm-page-enter">
+<div class="container-fluid p-0 rm-page-enter">
   
   <!-- Header & Pro Check -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
       <div class="d-flex align-items-center gap-2">
-        <h1 class="rm-page-title mb-0">Reportes Financieros</h1>
+        <h1 class="rm-page-title mb-0">Reportes Financieros e Inteligencia</h1>
         <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Plan Pro</span>
       </div>
-      <p class="text-muted small mb-0">Análisis detallado de utilidades, cobranza, rendimiento y ocupación de activos</p>
+      <p class="text-muted small mb-0">Análisis detallado de utilidades, ROI vitalicio, ranking de demanda y estado de cobranza</p>
     </div>
 
     @if (authService.isPro()) {
@@ -26,7 +26,7 @@
       </div>
       <h3 class="fw-bold text-dark mb-2">Módulo de Reportes Exclusivo de Plan Pro</h3>
       <p class="text-muted mx-auto mb-4" style="max-width: 540px;">
-        Desbloquea el análisis de balance general de utilidades, semáforo de morosidad en cuentas por cobrar, tasas de utilización de inventario y exportaciones PDF oficiales.
+        Desbloquea el análisis de balance general de utilidades, ROI vitalicio por activo, ranking de demanda insatisfecha y exportaciones PDF oficiales.
       </p>
 
       <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 mb-4">
@@ -36,19 +36,19 @@
           <div class="small text-muted">Ingresos menos gastos y margen neto</div>
         </div>
         <div class="p-3 bg-light rounded-3 text-start border">
-          <i class="bi bi-exclamation-triangle text-danger me-2"></i>
-          <strong>Cuentas por Cobrar</strong>
-          <div class="small text-muted">Semáforo de alertas de morosidad</div>
+          <i class="bi bi-gem text-primary me-2"></i>
+          <strong>ROI Vitalicio por Activo</strong>
+          <div class="small text-muted">Histórico de ganancias limpias desde el inicio</div>
         </div>
         <div class="p-3 bg-light rounded-3 text-start border">
-          <i class="bi bi-pie-chart text-primary me-2"></i>
-          <strong>Retorno por Activo</strong>
-          <div class="small text-muted">% de ocupación y ROI financiero</div>
+          <i class="bi bi-fire text-warning me-2"></i>
+          <strong>Ranking de Más Solicitados</strong>
+          <div class="small text-muted">Identifica activos de alta demanda para re-invertir</div>
         </div>
       </div>
 
       <div>
-        <a routerLink="/settings/upgrade" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
+        <a routerLink="/settings" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
           <i class="bi bi-stars me-1"></i> Actualizar a Plan Pro
         </a>
       </div>
@@ -64,41 +64,59 @@
         <div class="row g-3 align-items-center justify-content-between">
           
           <!-- Tab Navigation -->
-          <div class="col-12 col-lg-7">
-            <ul class="nav nav-pills gap-2">
+          <div class="col-12 col-lg-8">
+            <ul class="nav nav-pills gap-1 flex-nowrap overflow-x-auto pb-1">
               <li class="nav-item">
                 <button
-                  class="nav-link btn-sm"
+                  class="nav-link btn-sm text-nowrap"
                   [class.active]="activeTab() === 'balance'"
                   (click)="setTab('balance')"
                 >
-                  <i class="bi bi-cash-coin me-1"></i> Balance de Utilidades
+                  <i class="bi bi-cash-coin me-1"></i> Balance
                 </button>
               </li>
               <li class="nav-item">
                 <button
-                  class="nav-link btn-sm"
+                  class="nav-link btn-sm text-nowrap"
                   [class.active]="activeTab() === 'receivable'"
                   (click)="setTab('receivable')"
                 >
-                  <i class="bi bi-clock-history me-1"></i> Cuentas por Cobrar
+                  <i class="bi bi-clock-history me-1"></i> Cobranza
                 </button>
               </li>
               <li class="nav-item">
                 <button
-                  class="nav-link btn-sm"
+                  class="nav-link btn-sm text-nowrap"
                   [class.active]="activeTab() === 'utilization'"
                   (click)="setTab('utilization')"
                 >
-                  <i class="bi bi-bar-chart-steps me-1"></i> Utilización de Activos
+                  <i class="bi bi-calendar-range me-1"></i> Ocupación
+                </button>
+              </li>
+              <li class="nav-item">
+                <button
+                  class="nav-link btn-sm text-nowrap"
+                  [class.active]="activeTab() === 'roi'"
+                  (click)="setTab('roi')"
+                >
+                  <i class="bi bi-gem me-1"></i> ROI Vitalicio
+                </button>
+              </li>
+              <li class="nav-item">
+                <button
+                  class="nav-link btn-sm text-nowrap"
+                  [class.active]="activeTab() === 'demand'"
+                  (click)="setTab('demand')"
+                >
+                  <i class="bi bi-fire me-1"></i> Ranking Demanda
                 </button>
               </li>
             </ul>
           </div>
 
           <!-- Date Filters (For balance and utilization) -->
-          @if (activeTab() !== 'receivable') {
-            <div class="col-12 col-lg-5 d-flex align-items-center gap-2 justify-content-lg-end">
+          @if (activeTab() === 'balance' || activeTab() === 'utilization') {
+            <div class="col-12 col-lg-4 d-flex align-items-center gap-2 justify-content-lg-end">
               <div class="input-group input-group-sm">
                 <span class="input-group-text bg-light border-0">Del</span>
                 <input
@@ -125,8 +143,6 @@
     <!-- TAB 1: Balance General -->
     @if (activeTab() === 'balance') {
       @if (balance(); as bal) {
-        
-        <!-- KPI Cards -->
         <div class="row g-3 mb-4">
           <div class="col-12 col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
@@ -153,26 +169,21 @@
             </div>
           </div>
         </div>
-
       }
     }
 
     <!-- TAB 2: Cuentas por Cobrar -->
     @if (activeTab() === 'receivable') {
       @if (receivable(); as rec) {
-        
-        <div class="row g-3 mb-4">
-          <div class="col-12 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-danger text-white">
-              <span class="small text-white-50 text-uppercase">Total Cartera Vencida / Pendiente</span>
-              <h3 class="fw-bold mb-0 mt-1">{{ rec.total_receivable_cents | currencyMxn }}</h3>
+        <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="small text-muted text-uppercase">Total Pendiente por Cobrar</span>
+              <h3 class="fw-bold text-danger mb-0 mt-1">{{ rec.total_receivable_cents | currencyMxn }}</h3>
             </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-              <span class="small text-muted text-uppercase">Contratos con Saldo Deudor</span>
-              <h3 class="fw-bold text-dark mb-0 mt-1">{{ rec.count }}</h3>
-            </div>
+            <span class="badge bg-danger-subtle text-danger px-3 py-2 fs-6 rounded-pill">
+              {{ rec.count }} {{ rec.count === 1 ? 'contrato pendiente' : 'contratos pendientes' }}
+            </span>
           </div>
         </div>
 
@@ -181,13 +192,11 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr class="small text-muted text-uppercase">
-                  <th class="ps-4">Folio</th>
-                  <th>Cliente</th>
+                  <th class="ps-4">Folio / Cliente</th>
                   <th>Activo</th>
                   <th>Vencimiento</th>
-                  <th>Días de Atraso</th>
-                  <th class="text-end">Total</th>
-                  <th class="text-end">Cobrado</th>
+                  <th class="text-end">Monto Total</th>
+                  <th class="text-end">Pagado</th>
                   <th class="text-end pe-4">Saldo Pendiente</th>
                 </tr>
               </thead>
@@ -195,27 +204,18 @@
                 @for (item of rec.items; track item.rental_id) {
                   <tr>
                     <td class="ps-4">
-                      <span class="fw-bold text-primary">{{ item.folio }}</span>
+                      <div class="fw-bold text-dark">{{ item.folio }}</div>
+                      <div class="small text-muted">{{ item.customer_name }} ({{ item.customer_phone }})</div>
                     </td>
+                    <td><span class="badge bg-light text-dark border">{{ item.asset_name }}</span></td>
                     <td>
-                      <div class="fw-bold text-dark">{{ item.customer_name }}</div>
-                      <small class="text-muted">{{ item.customer_phone }}</small>
-                    </td>
-                    <td>{{ item.asset_name }}</td>
-                    <td>{{ item.end_date }}</td>
-                    <td>
-                      @if (item.overdue_days > 0) {
-                        <span class="badge bg-danger text-white rounded-pill px-2">
-                          {{ item.overdue_days }} días vencida
-                        </span>
-                      } @else {
-                        <span class="badge bg-success-subtle text-success rounded-pill px-2">
-                          Al corriente
-                        </span>
+                      <span class="small text-dark">{{ item.end_date }}</span>
+                      @if (item.urgency === 'overdue') {
+                        <span class="badge bg-danger ms-1">Vencido hace {{ item.overdue_days }}d</span>
                       }
                     </td>
-                    <td class="text-end">{{ item.total_amount_cents | currencyMxn }}</td>
-                    <td class="text-end text-success">{{ item.paid_amount_cents | currencyMxn }}</td>
+                    <td class="text-end fw-semibold">{{ item.total_amount_cents | currencyMxn }}</td>
+                    <td class="text-end text-success fw-semibold">{{ item.paid_amount_cents | currencyMxn }}</td>
                     <td class="text-end pe-4 fw-bold text-danger">{{ item.pending_amount_cents | currencyMxn }}</td>
                   </tr>
                 }
@@ -223,46 +223,157 @@
             </table>
           </div>
         </div>
-
       }
     }
 
-    <!-- TAB 3: Utilización de Activos -->
+    <!-- TAB 3: Ocupación por Fechas -->
     @if (activeTab() === 'utilization') {
-      @if (utilization(); as util) {
+      @if (utilization(); as uti) {
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr class="small text-muted text-uppercase">
                   <th class="ps-4">Activo</th>
-                  <th>Días Rentados</th>
+                  <th>Días Rentado</th>
                   <th>Tasa de Ocupación</th>
                   <th class="text-end">Ingresos</th>
-                  <th class="text-end">Mantenimientos</th>
-                  <th class="text-end pe-4">Retorno Neto (ROI)</th>
+                  <th class="text-end">Gastos</th>
+                  <th class="text-end pe-4">Retorno Neto</th>
                 </tr>
               </thead>
               <tbody>
-                @for (item of util.items; track item.asset_id) {
+                @for (item of uti.items; track item.asset_id) {
                   <tr>
                     <td class="ps-4">
                       <div class="fw-bold text-dark">{{ item.name }}</div>
                       <small class="text-muted">S/N: {{ item.serial_number || 'N/A' }}</small>
                     </td>
-                    <td>{{ item.rented_days }} / {{ item.total_days_in_period }} días</td>
-                    <td style="min-width: 160px;">
-                      <div class="d-flex align-items-center gap-2">
-                        <div class="progress flex-grow-1" style="height: 6px;">
-                          <div class="progress-bar bg-primary" [style.width.%]="item.utilization_pct"></div>
+                    <td><span class="fw-bold text-dark">{{ item.rented_days }} / {{ item.total_days_in_period }} días</span></td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2" style="max-width: 140px;">
+                        <div class="progress flex-grow-1" style="height: 8px;">
+                          <div
+                            class="progress-bar bg-primary"
+                            [style.width.%]="item.utilization_pct"
+                          ></div>
                         </div>
-                        <span class="small fw-semibold text-dark">{{ item.utilization_pct }}%</span>
+                        <span class="small fw-bold text-muted">{{ item.utilization_pct }}%</span>
                       </div>
                     </td>
-                    <td class="text-end text-success fw-semibold">{{ item.income_cents | currencyMxn }}</td>
-                    <td class="text-end text-danger">{{ item.expense_cents | currencyMxn }}</td>
-                    <td class="text-end pe-4 fw-bold" [class.text-primary]="item.net_return_cents >= 0" [class.text-danger]="item.net_return_cents < 0">
-                      {{ item.net_return_cents | currencyMxn }}
+                    <td class="text-end text-success fw-bold">{{ item.income_cents | currencyMxn }}</td>
+                    <td class="text-end text-danger fw-bold">-{{ item.expense_cents | currencyMxn }}</td>
+                    <td class="text-end pe-4 fw-bold text-primary">{{ item.net_return_cents | currencyMxn }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- TAB 4: Rentabilidad Vitalicia de Activos (ROI) -->
+    @if (activeTab() === 'roi') {
+      @if (assetRoi(); as roi) {
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-sm-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+              <span class="small text-muted text-uppercase">Ingresos Totales Acumulados</span>
+              <h3 class="fw-bold text-success mb-0 mt-1">{{ roi.total_revenue_cents | currencyMxn }}</h3>
+            </div>
+          </div>
+          <div class="col-12 col-sm-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+              <span class="small text-muted text-uppercase">Gastos / Mantenimientos Totales</span>
+              <h3 class="fw-bold text-danger mb-0 mt-1">-{{ roi.total_expense_cents | currencyMxn }}</h3>
+            </div>
+          </div>
+          <div class="col-12 col-sm-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-primary text-white">
+              <span class="small text-white-50 text-uppercase">Ganancia Neta Vitalicia Limpia</span>
+              <h3 class="fw-bold mb-0 mt-1">{{ roi.total_net_profit_cents | currencyMxn }}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-header bg-light border-0 p-3">
+            <h6 class="fw-bold mb-0 text-dark">Rentabilidad Histórica Vitalicia por Activo (Desde el Día 1)</h6>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr class="small text-muted text-uppercase">
+                  <th class="ps-4">Activo / Categoría</th>
+                  <th class="text-center">Rentas Totales</th>
+                  <th class="text-center">Días Activo</th>
+                  <th class="text-end">Ingreso Bruto</th>
+                  <th class="text-end">Gasto Mant.</th>
+                  <th class="text-end">Ganancia Neta</th>
+                  <th class="text-end pe-4">Margen ROI</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of roi.items; track item.id) {
+                  <tr>
+                    <td class="ps-4">
+                      <div class="fw-bold text-dark">{{ item.name }}</div>
+                      <small class="badge bg-light text-dark border">{{ item.category_name }}</small>
+                    </td>
+                    <td class="text-center fw-bold text-dark">{{ item.rentals_count }} contratos</td>
+                    <td class="text-center small text-muted">{{ item.total_days_rented }} días</td>
+                    <td class="text-end text-success fw-bold">{{ item.total_revenue_cents | currencyMxn }}</td>
+                    <td class="text-end text-danger fw-bold">-{{ item.total_expense_cents | currencyMxn }}</td>
+                    <td class="text-end fw-bold text-primary fs-6">{{ item.net_profit_cents | currencyMxn }}</td>
+                    <td class="text-end pe-4">
+                      <span class="badge rounded-pill px-2.5 py-1 {{ item.roi_margin_pct >= 50 ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }}">
+                        {{ item.roi_margin_pct }}%
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- TAB 5: Ranking de Activos Más Demandados / Solicitados -->
+    @if (activeTab() === 'demand') {
+      @if (assetDemand(); as dem) {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-header bg-light border-0 p-3">
+            <h6 class="fw-bold mb-0 text-dark">Ranking de Ocupación y Demanda del Inventario</h6>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr class="small text-muted text-uppercase">
+                  <th class="ps-4"># Posición</th>
+                  <th>Activo / Categoría</th>
+                  <th class="text-center">Veces Rentado</th>
+                  <th class="text-center">Días de Ocupación</th>
+                  <th class="text-end pe-4">Diagnóstico comercial</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of dem.items; track item.id; let idx = $index) {
+                  <tr>
+                    <td class="ps-4 fw-bold text-muted">
+                      #{{ idx + 1 }}
+                    </td>
+                    <td>
+                      <div class="fw-bold text-dark">{{ item.name }}</div>
+                      <small class="text-muted">{{ item.category_name }}</small>
+                    </td>
+                    <td class="text-center fw-bold text-dark fs-6">{{ item.rentals_count }} rentas</td>
+                    <td class="text-center small text-dark">{{ item.days_rented }} días acumulados</td>
+                    <td class="text-end pe-4">
+                      <span class="badge rounded-pill px-3 py-1.5 {{ item.demand_class }}">
+                        {{ item.demand_label }}
+                      </span>
                     </td>
                   </tr>
                 }
