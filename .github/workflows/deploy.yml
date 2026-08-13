@@ -35,7 +35,7 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY || secrets.ssh_key || secrets.SSH_KEY }}
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD || secrets.password || 'Cruzazul29.$' }}
           script: |
-            mkdir -p ${{ secrets.HOSTINGER_ADMIN_PATH || '/home/u111559603/domains/ren-admin.faceaut.com/public_html' }}
+            mkdir -p /home/u111559603/domains/faceaut.com/public_html/ren-admin
 
       - name: Deploy Compiled Files via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -46,7 +46,7 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY || secrets.ssh_key || secrets.SSH_KEY }}
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD || secrets.password || 'Cruzazul29.$' }}
           source: "dist/admin/browser/*"
-          target: ${{ secrets.HOSTINGER_ADMIN_PATH || '/home/u111559603/domains/ren-admin.faceaut.com/public_html' }}
+          target: "/home/u111559603/domains/faceaut.com/public_html/ren-admin"
           strip_prefix: "dist/admin/browser"
           rm: true
           timeout: 120s
