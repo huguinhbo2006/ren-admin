@@ -1,0 +1,276 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Header & New Payment Button -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="rm-page-title">Cobranza e Ingresos</h1>
+      <p class="text-muted small mb-0">Registra abonos, consulta los ingresos del mes y emite recibos de pago</p>
+    </div>
+
+    <button class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm" (click)="openPaymentModal()">
+      <i class="bi bi-cash-stack"></i>
+      <span>Registrar Cobro</span>
+    </button>
+  </div>
+
+  <!-- Monthly Summary Cards -->
+  @if (summary(); as summ) {
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-primary text-white">
+          <span class="small text-white-50">Total Cobrado ({{ summ.month }})</span>
+          <h3 class="fw-bold mb-0 mt-1">{{ summ.total_income_cents | currencyMxn }}</h3>
+        </div>
+      </div>
+      @for (m of summ.by_method; track m.method) {
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <span class="small text-muted text-uppercase">{{ getMethodBadge(m.method).label }}</span>
+            <h4 class="fw-bold text-dark mb-0 mt-1">{{ m.total_cents | currencyMxn }}</h4>
+            <span class="extra-small text-muted">{{ m.count }} {{ m.count === 1 ? 'transacción' : 'transacciones' }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Filters Toolbar -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-10">
+          <select
+            class="form-select bg-light border-0"
+            [ngModel]="selectedMethod()"
+            (ngModelChange)="selectedMethod.set($event); onFilterChange()"
+          >
+            <option value="">Todos los métodos de cobro</option>
+            <option value="cash">💵 Efectivo</option>
+            <option value="transfer">🏦 Transferencia Bancaria</option>
+            <option value="card">💳 Tarjeta Débito/Crédito</option>
+            <option value="check">📜 Cheque</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex justify-content-end">
+          <button
+            class="btn btn-outline-secondary btn-sm w-100"
+            (click)="selectedMethod.set(''); onFilterChange()"
+            title="Limpiar filtros"
+          >
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Skeletons -->
+  @if (loading()) {
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+          <div class="rm-skeleton rm-skeleton-title w-50 mb-2"></div>
+          <div class="rm-skeleton rm-skeleton-text w-25"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && payments().length === 0) {
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+      <div class="rm-empty-state">
+        <div class="rm-empty-icon text-success">
+          <i class="bi bi-cash-coin"></i>
+        </div>
+        <h5>No hay pagos registrados</h5>
+        <p class="text-muted small">Registra tu primer cobro para comenzar a registrar ingresos.</p>
+        <button class="btn btn-primary" (click)="openPaymentModal()">
+          Registrar Cobro
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Payments Table -->
+  @if (!loading() && payments().length > 0) {
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr class="small text-muted text-uppercase">
+              <th class="ps-4">Folio / Contrato</th>
+              <th>Cliente</th>
+              <th>Método</th>
+              <th>Referencia</th>
+              <th>Fecha de Pago</th>
+              <th class="text-end">Monto Recibido</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of payments(); track p.id) {
+              <tr>
+                <td class="ps-4">
+                  <span class="fw-bold text-primary">{{ p.rental_folio || ('RNT-#' + p.rental_id) }}</span>
+                </td>
+                <td>
+                  <div class="fw-bold text-dark">{{ p.rental?.customer?.name || 'Cliente' }}</div>
+                  <small class="text-muted">{{ p.rental?.asset?.name }}</small>
+                </td>
+                <td>
+                  <span class="badge rounded-pill px-2 py-1 {{ getMethodBadge(p.method).class }}">
+                    {{ getMethodBadge(p.method).label }}
+                  </span>
+                </td>
+                <td>
+                  <span class="small text-muted">{{ p.reference || 'Sin referencia' }}</span>
+                </td>
+                <td>
+                  <span class="small text-dark">{{ p.payment_date }}</span>
+                </td>
+                <td class="text-end fw-bold text-success">
+                  {{ p.amount_cents | currencyMxn }}
+                </td>
+                <td class="text-end pe-4">
+                  <div class="btn-group btn-group-sm">
+                    <button
+                      class="btn btn-outline-success rounded-circle me-1"
+                      (click)="downloadReceipt(p, $event)"
+                      title="Descargar Recibo PDF"
+                    >
+                      <i class="bi bi-file-earmark-pdf"></i>
+                    </button>
+                    <button
+                      class="btn btn-outline-danger rounded-circle"
+                      (click)="deletePayment(p, $event)"
+                      title="Eliminar Cobro"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>
+
+<!-- Payment Modal -->
+@if (isModalOpen()) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.6);" (click)="closeModal()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+        
+        <div class="modal-header border-0 bg-light p-4">
+          <h5 class="modal-title fw-bold text-dark mb-0">Registrar Cobro de Renta</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+
+        <form [formGroup]="paymentForm" (ngSubmit)="savePayment()">
+          <div class="modal-body p-4">
+            
+            <!-- Rental Selector -->
+            <div class="mb-3">
+              <label for="pay-rental" class="form-label small fw-semibold text-dark">Contrato de Renta *</label>
+              <select id="pay-rental" formControlName="rental_id" class="form-select">
+                <option [ngValue]="null">Selecciona un contrato...</option>
+                @for (r of rentals(); track r.id) {
+                  <option [value]="r.id">
+                    {{ r.folio }} - {{ r.customer?.name }} (Saldo: {{ r.pending_balance_cents | currencyMxn }})
+                  </option>
+                }
+              </select>
+            </div>
+
+            <!-- Balance Quick Fill Helper -->
+            @if (selectedRentalForPayment(); as sel) {
+              <div class="p-3 bg-light rounded-3 mb-3 d-flex justify-content-between align-items-center border">
+                <div>
+                  <small class="text-muted d-block">Saldo Pendiente:</small>
+                  <strong class="text-danger">{{ sel.pending_balance_cents | currencyMxn }}</strong>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" (click)="payFullBalance()">
+                  Liquidar Total
+                </button>
+              </div>
+            }
+
+            <!-- Amount -->
+            <div class="mb-3">
+              <label for="pay-amt" class="form-label small fw-semibold text-dark">Monto a Cobrar ($ MXN) *</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  id="pay-amt"
+                  formControlName="amount"
+                  class="form-control"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <!-- Method -->
+            <div class="mb-3">
+              <label for="pay-meth" class="form-label small fw-semibold text-dark">Método de Pago *</label>
+              <select id="pay-meth" formControlName="method" class="form-select">
+                <option value="cash">Efectivo</option>
+                <option value="transfer">Transferencia Bancaria</option>
+                <option value="card">Tarjeta Débito/Crédito</option>
+                <option value="check">Cheque</option>
+              </select>
+            </div>
+
+            <!-- Reference -->
+            <div class="mb-3">
+              <label for="pay-ref" class="form-label small fw-semibold text-dark">Referencia / Folio Bancario</label>
+              <input
+                type="text"
+                id="pay-ref"
+                formControlName="reference"
+                class="form-control"
+                placeholder="Ej. SPEI-88491 / Autorización 123"
+              />
+            </div>
+
+            <!-- Date -->
+            <div class="mb-3">
+              <label for="pay-dt" class="form-label small fw-semibold text-dark">Fecha del Pago *</label>
+              <input
+                type="date"
+                id="pay-dt"
+                formControlName="payment_date"
+                class="form-control"
+              />
+            </div>
+
+          </div>
+
+          <div class="modal-footer border-0 bg-light p-3">
+            <button type="button" class="btn btn-light" (click)="closeModal()">Cancelar</button>
+            <button
+              type="submit"
+              class="btn btn-primary px-4 fw-semibold shadow-sm"
+              [disabled]="saving()"
+            >
+              @if (saving()) {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <span>Guardando...</span>
+              } @else {
+                <span>Registrar Pago</span>
+              }
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+}

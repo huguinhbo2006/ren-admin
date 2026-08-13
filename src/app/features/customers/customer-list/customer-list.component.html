@@ -1,0 +1,342 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Header & Plan Limits -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="rm-page-title">Cartera de Clientes</h1>
+      <p class="text-muted small mb-0">Administra los datos de contacto, historial de contratos y estados de cuenta</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+      <!-- Plan Counter -->
+      @if (isFreePlan()) {
+        <div class="plan-counter-pill bg-white border rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-2">
+          <span class="small fw-semibold text-muted">Límite Plan Free:</span>
+          <span class="badge" [class.bg-danger]="limitReached()" [class.bg-primary]="!limitReached()">
+            {{ customerCount() }} / {{ maxCustomers() }}
+          </span>
+          @if (limitReached()) {
+            <a routerLink="/upgrade" class="btn btn-warning btn-xs rounded-pill py-0 px-2 fw-bold text-dark text-decoration-none">
+              <i class="bi bi-lightning-fill"></i> Pro
+            </a>
+          }
+        </div>
+      }
+
+      <a
+        routerLink="/customers/new"
+        class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm"
+        [class.disabled]="limitReached()"
+      >
+        <i class="bi bi-person-plus-fill"></i>
+        <span>Nuevo Cliente</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Search and Filters Bar -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <div class="row g-3 align-items-center">
+        
+        <!-- Search Input -->
+        <div class="col-12 col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+            <input
+              type="text"
+              class="form-control bg-light border-start-0 ps-0"
+              placeholder="Buscar por nombre, teléfono, email o RFC..."
+              [ngModel]="searchTerm()"
+              (ngModelChange)="onSearchChange($event)"
+            />
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-12 col-sm-6 col-md-4">
+          <select
+            class="form-select bg-light border-0"
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="selectedStatus.set($event); onStatusChange()"
+          >
+            <option value="">Todos los clientes</option>
+            <option value="true">Solo Activos</option>
+            <option value="false">Solo Inactivos</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="col-12 col-sm-6 col-md-2 d-flex justify-content-end">
+          <button
+            class="btn btn-outline-secondary btn-sm w-100"
+            (click)="searchTerm.set(''); selectedStatus.set(''); onStatusChange()"
+            title="Limpiar filtros"
+          >
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Skeletons -->
+  @if (loading()) {
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="d-flex align-items-center gap-3 py-3 border-bottom">
+          <div class="rm-skeleton rounded-circle" style="width: 44px; height: 44px;"></div>
+          <div class="flex-grow-1">
+            <div class="rm-skeleton rm-skeleton-title w-50 mb-2"></div>
+            <div class="rm-skeleton rm-skeleton-text w-25"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && customers().length === 0) {
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+      <div class="rm-empty-state">
+        <div class="rm-empty-icon text-primary">
+          <i class="bi bi-people"></i>
+        </div>
+        <h5>No se encontraron clientes</h5>
+        <p class="text-muted small">
+          {{ searchTerm() || selectedStatus() ? 'Prueba con otros términos de búsqueda.' : 'Agrega a tu primer cliente para comenzar a registrar rentas.' }}
+        </p>
+        @if (!limitReached()) {
+          <a routerLink="/customers/new" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Registrar Cliente</span>
+          </a>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Customers Table -->
+  @if (!loading() && customers().length > 0) {
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr class="small text-muted text-uppercase">
+              <th class="ps-4">Cliente</th>
+              <th>Contacto</th>
+              <th>RFC</th>
+              <th class="text-center">Rentas</th>
+              <th class="text-end">Saldo Pendiente</th>
+              <th class="text-center">Estado</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (customer of customers(); track customer.id) {
+              <tr>
+                <!-- Cliente & Avatar -->
+                <td class="ps-4">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="customer-avatar bg-primary-subtle text-primary fw-bold">
+                      {{ customer.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <div>
+                      <div class="fw-bold text-dark">{{ customer.name }}</div>
+                      @if (customer.address) {
+                        <small class="text-muted text-truncate d-inline-block" style="max-width: 220px;" [title]="customer.address">
+                          <i class="bi bi-geo-alt me-1"></i>{{ customer.address }}
+                        </small>
+                      }
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Contacto & WhatsApp -->
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="text-dark fw-semibold small">{{ customer.phone }}</span>
+                    @if (customer.phone) {
+                      <a
+                        [href]="'https://wa.me/' + getCleanPhone(customer.phone)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn btn-success btn-xs rounded-circle p-1 d-inline-flex align-items-center justify-content-center"
+                        style="width: 24px; height: 24px;"
+                        title="Enviar WhatsApp"
+                      >
+                        <i class="bi bi-whatsapp"></i>
+                      </a>
+                    }
+                  </div>
+                  @if (customer.email) {
+                    <small class="text-muted d-block">{{ customer.email }}</small>
+                  }
+                </td>
+
+                <!-- RFC -->
+                <td>
+                  <span class="badge bg-light text-dark border fw-normal">
+                    {{ customer.rfc || 'Sin RFC' }}
+                  </span>
+                </td>
+
+                <!-- Rentas Contadas -->
+                <td class="text-center">
+                  <span class="badge bg-secondary-subtle text-secondary px-3 py-1">
+                    {{ customer.rental_count || 0 }}
+                  </span>
+                </td>
+
+                <!-- Saldo Pendiente -->
+                <td class="text-end">
+                  @if ((customer.total_owed_cents || 0) > 0) {
+                    <span class="badge bg-danger-subtle text-danger fw-bold px-2 py-1">
+                      {{ customer.total_owed_cents | currencyMxn }}
+                    </span>
+                  } @else {
+                    <span class="text-success small fw-semibold">
+                      <i class="bi bi-check-circle me-1"></i>Al corriente
+                    </span>
+                  }
+                </td>
+
+                <!-- Estado -->
+                <td class="text-center">
+                  <span class="badge rounded-pill px-2 py-1 {{ customer.is_active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
+                    {{ customer.is_active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+
+                <!-- Acciones -->
+                <td class="text-end pe-4">
+                  <div class="btn-group btn-group-sm">
+                    <button
+                      class="btn btn-outline-info rounded-circle me-1"
+                      (click)="openStatement(customer)"
+                      title="Ver Estado de Cuenta"
+                    >
+                      <i class="bi bi-file-earmark-text"></i>
+                    </button>
+                    <a
+                      [routerLink]="['/customers', customer.id, 'edit']"
+                      class="btn btn-outline-secondary rounded-circle me-1"
+                      title="Editar"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <button
+                      class="btn btn-outline-danger rounded-circle"
+                      (click)="deleteCustomer(customer, $event)"
+                      title="Eliminar"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>
+
+<!-- Statement Modal -->
+@if (selectedStatement(); as statement) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.6);" (click)="closeStatement()">
+    <div class="modal-dialog modal-dialog-centered modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+        
+        <div class="modal-header border-0 bg-primary text-white p-4">
+          <div>
+            <h5 class="modal-title fw-bold mb-1">Estado de Cuenta</h5>
+            <p class="mb-0 text-white-50 small">Cliente: {{ statement.customer.name }} · {{ statement.customer.phone }}</p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" (click)="closeStatement()"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          
+          <!-- Summary Cards -->
+          <div class="row g-3 mb-4">
+            <div class="col-4">
+              <div class="p-3 bg-light rounded-3 text-center">
+                <span class="small text-muted d-block">Total Facturado</span>
+                <strong class="h6 fw-bold text-dark">{{ statement.summary.total_billed_cents | currencyMxn }}</strong>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-3 bg-success-subtle rounded-3 text-center">
+                <span class="small text-success d-block">Total Pagado</span>
+                <strong class="h6 fw-bold text-success">{{ statement.summary.total_paid_cents | currencyMxn }}</strong>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-3 bg-danger-subtle rounded-3 text-center">
+                <span class="small text-danger d-block">Saldo Deudor</span>
+                <strong class="h6 fw-bold text-danger">{{ statement.summary.balance_owed_cents | currencyMxn }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rentals Breakdown -->
+          <h6 class="fw-bold text-dark mb-3">Desglose de Rentas y Contratos</h6>
+
+          @if (statement.rentals.length === 0) {
+            <p class="text-muted small text-center py-3">Este cliente aún no cuenta con rentas registradas.</p>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr class="small text-muted">
+                    <th>Folio</th>
+                    <th>Activo</th>
+                    <th>Periodo</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Pagado</th>
+                    <th class="text-end">Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of statement.rentals; track r.rental_id) {
+                    <tr>
+                      <td class="fw-bold text-primary">{{ r.folio }}</td>
+                      <td>{{ r.asset_name }}</td>
+                      <td class="small text-muted">{{ r.start_date }} al {{ r.end_date }}</td>
+                      <td class="text-end">{{ r.total_amount_cents | currencyMxn }}</td>
+                      <td class="text-end text-success">{{ r.paid_amount_cents | currencyMxn }}</td>
+                      <td class="text-end fw-bold" [class.text-danger]="r.balance_cents > 0" [class.text-muted]="r.balance_cents === 0">
+                        {{ r.balance_cents | currencyMxn }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+        </div>
+
+        <div class="modal-footer border-0 bg-light p-3">
+          @if (statement.customer.phone) {
+            <a
+              [href]="'https://wa.me/' + getCleanPhone(statement.customer.phone)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-success btn-sm px-3"
+            >
+              <i class="bi bi-whatsapp me-1"></i> Contactar por WhatsApp
+            </a>
+          }
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeStatement()">Cerrar</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

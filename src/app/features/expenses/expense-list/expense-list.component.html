@@ -1,0 +1,324 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Header & New Expense Button -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="rm-page-title">Egresos y Mantenimientos</h1>
+      <p class="text-muted small mb-0">Controla los gastos operativos, servicios de mantenimiento preventivo y reparaciones de activos</p>
+    </div>
+
+    <button class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm" (click)="openExpenseModal()">
+      <i class="bi bi-tools"></i>
+      <span>Registrar Egreso</span>
+    </button>
+  </div>
+
+  <!-- Monthly Summary Cards -->
+  @if (summary(); as summ) {
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-danger text-white">
+          <span class="small text-white-50">Total Egresos ({{ summ.month }})</span>
+          <h3 class="fw-bold mb-0 mt-1">{{ summ.total_expense_cents | currencyMxn }}</h3>
+        </div>
+      </div>
+      @for (t of summ.by_type; track t.type) {
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <span class="small text-muted text-uppercase">{{ getTypeBadge(t.type).label }}</span>
+            <h4 class="fw-bold text-dark mb-0 mt-1">{{ t.total_cents | currencyMxn }}</h4>
+            <span class="extra-small text-muted">{{ t.count }} {{ t.count === 1 ? 'registro' : 'registros' }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Filters Toolbar -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-10">
+          <select
+            class="form-select bg-light border-0"
+            [ngModel]="selectedType()"
+            (ngModelChange)="selectedType.set($event); onFilterChange()"
+          >
+            <option value="">Todos los tipos de gasto</option>
+            <option value="maintenance">🔧 Mantenimiento preventivo</option>
+            <option value="repair">🚨 Reparación y correctivo</option>
+            <option value="purchase">📦 Adquisición de insumo/activo</option>
+            <option value="other">💼 Otro gasto operativo</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex justify-content-end">
+          <button
+            class="btn btn-outline-secondary btn-sm w-100"
+            (click)="selectedType.set(''); onFilterChange()"
+            title="Limpiar filtros"
+          >
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Skeletons -->
+  @if (loading()) {
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+          <div class="rm-skeleton rm-skeleton-title w-50 mb-2"></div>
+          <div class="rm-skeleton rm-skeleton-text w-25"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && expenses().length === 0) {
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+      <div class="rm-empty-state">
+        <div class="rm-empty-icon text-danger">
+          <i class="bi bi-wrench-adjustable"></i>
+        </div>
+        <h5>No hay egresos registrados</h5>
+        <p class="text-muted small">Registra los mantenimientos y compras para llevar tu balance de utilidades al día.</p>
+        <button class="btn btn-primary" (click)="openExpenseModal()">
+          Registrar Egreso
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Expenses Table -->
+  @if (!loading() && expenses().length > 0) {
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr class="small text-muted text-uppercase">
+              <th class="ps-4">Descripción / Concepto</th>
+              <th>Activo</th>
+              <th>Tipo</th>
+              <th>Proveedor</th>
+              <th>Fecha</th>
+              <th class="text-center">Comprobante</th>
+              <th class="text-end">Monto</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of expenses(); track e.id) {
+              <tr>
+                <!-- Descripción -->
+                <td class="ps-4">
+                  <div class="fw-bold text-dark">{{ e.description }}</div>
+                  <small class="text-muted">{{ e.category }}</small>
+                </td>
+
+                <!-- Activo -->
+                <td>
+                  @if (e.asset) {
+                    <span class="badge bg-light text-dark border">
+                      <i class="bi bi-box-seam me-1"></i>{{ e.asset.name }}
+                    </span>
+                  } @else {
+                    <span class="text-muted small">Gasto General</span>
+                  }
+                </td>
+
+                <!-- Tipo -->
+                <td>
+                  <span class="badge rounded-pill px-2 py-1 {{ getTypeBadge(e.type).class }}">
+                    {{ getTypeBadge(e.type).label }}
+                  </span>
+                </td>
+
+                <!-- Proveedor -->
+                <td>
+                  <span class="small text-dark">{{ e.vendor || 'N/A' }}</span>
+                </td>
+
+                <!-- Fecha -->
+                <td>
+                  <span class="small text-dark">{{ e.expense_date }}</span>
+                </td>
+
+                <!-- Comprobante -->
+                <td class="text-center">
+                  @if (e.receipt_url) {
+                    <a [href]="e.receipt_url" target="_blank" class="btn btn-sm btn-outline-secondary rounded-circle" title="Ver comprobante">
+                      <i class="bi bi-paperclip"></i>
+                    </a>
+                  } @else {
+                    <span class="text-muted small">—</span>
+                  }
+                </td>
+
+                <!-- Monto -->
+                <td class="text-end fw-bold text-danger">
+                  -{{ e.amount_cents | currencyMxn }}
+                </td>
+
+                <!-- Acciones -->
+                <td class="text-end pe-4">
+                  <button
+                    class="btn btn-outline-danger btn-sm rounded-circle"
+                    (click)="deleteExpense(e, $event)"
+                    title="Eliminar Egreso"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>
+
+<!-- Expense Modal -->
+@if (isModalOpen()) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.6);" (click)="closeModal()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+        
+        <div class="modal-header border-0 bg-light p-4">
+          <h5 class="modal-title fw-bold text-dark mb-0">Registrar Egreso / Mantenimiento</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+
+        <form [formGroup]="expenseForm" (ngSubmit)="saveExpense()">
+          <div class="modal-body p-4">
+            
+            <!-- Type -->
+            <div class="mb-3">
+              <label for="exp-type" class="form-label small fw-semibold text-dark">Tipo de Gasto *</label>
+              <select id="exp-type" formControlName="type" class="form-select">
+                <option value="maintenance">Mantenimiento preventivo</option>
+                <option value="repair">Reparación o correctivo</option>
+                <option value="purchase">Adquisición de insumo/activo</option>
+                <option value="other">Otro gasto operativo</option>
+              </select>
+            </div>
+
+            <!-- Asset (Optional) -->
+            <div class="mb-3">
+              <label for="exp-asset" class="form-label small fw-semibold text-dark">Activo Relacionado (Opcional)</label>
+              <select id="exp-asset" formControlName="asset_id" class="form-select">
+                <option [ngValue]="null">Gasto General / Ninguno</option>
+                @for (a of assets(); track a.id) {
+                  <option [value]="a.id">{{ a.name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-3">
+              <label for="exp-cat" class="form-label small fw-semibold text-dark">Categoría / Concepto *</label>
+              <input
+                type="text"
+                id="exp-cat"
+                formControlName="category"
+                class="form-control"
+                placeholder="Ej. Servicio mecánico, Limpieza, Combustible"
+              />
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="exp-desc" class="form-label small fw-semibold text-dark">Descripción Detallada *</label>
+              <input
+                type="text"
+                id="exp-desc"
+                formControlName="description"
+                class="form-control"
+                placeholder="Ej. Cambio de bujías y cambio de aceite de motor"
+              />
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-3">
+              <label for="exp-amt" class="form-label small fw-semibold text-dark">Monto Gastado ($ MXN) *</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  id="exp-amt"
+                  formControlName="amount"
+                  class="form-control"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <!-- Vendor -->
+            <div class="mb-3">
+              <label for="exp-vendor" class="form-label small fw-semibold text-dark">Proveedor / Taller</label>
+              <input
+                type="text"
+                id="exp-vendor"
+                formControlName="vendor"
+                class="form-control"
+                placeholder="Ej. Taller Mecánico San Juan"
+              />
+            </div>
+
+            <!-- Date -->
+            <div class="mb-3">
+              <label for="exp-dt" class="form-label small fw-semibold text-dark">Fecha del Gasto *</label>
+              <input
+                type="date"
+                id="exp-dt"
+                formControlName="expense_date"
+                class="form-control"
+              />
+            </div>
+
+            <!-- Receipt File -->
+            <div class="mb-3">
+              <label for="exp-file" class="form-label small fw-semibold text-dark">Comprobante / Factura (Opcional)</label>
+              <input
+                type="file"
+                id="exp-file"
+                (change)="onFileSelected($event)"
+                accept="image/*,.pdf"
+                class="form-control"
+              />
+              @if (receiptPreview()) {
+                <div class="mt-2 text-center">
+                  <img [src]="receiptPreview()" alt="Preview" class="img-thumbnail" style="max-height: 120px;" />
+                </div>
+              }
+            </div>
+
+          </div>
+
+          <div class="modal-footer border-0 bg-light p-3">
+            <button type="button" class="btn btn-light" (click)="closeModal()">Cancelar</button>
+            <button
+              type="submit"
+              class="btn btn-primary px-4 fw-semibold shadow-sm"
+              [disabled]="saving()"
+            >
+              @if (saving()) {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <span>Guardando...</span>
+              } @else {
+                <span>Registrar Egreso</span>
+              }
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+}

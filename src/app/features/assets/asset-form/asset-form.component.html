@@ -1,0 +1,262 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Back Button & Header -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a routerLink="/assets" class="btn btn-outline-secondary btn-sm rounded-circle" title="Regresar al catálogo">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h1 class="rm-page-title mb-0">
+        {{ isEditMode() ? 'Editar Activo' : 'Registrar Nuevo Activo' }}
+      </h1>
+      <p class="text-muted small mb-0">
+        {{ isEditMode() ? 'Modifica las tarifas, estado o detalles del bien' : 'Ingresa la información, tarifas y fotografías para el catálogo' }}
+      </p>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger d-flex align-items-center mb-4 rounded-3" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2 fs-5 flex-shrink-0"></i>
+      <div>{{ errorMessage() }}</div>
+    </div>
+  }
+
+  <form [formGroup]="assetForm" (ngSubmit)="onSubmit()" novalidate>
+    <div class="row g-4">
+      
+      <!-- Columna Izquierda: Datos Principales -->
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-4">Información General</h5>
+
+          <div class="row g-3">
+            <!-- Nombre -->
+            <div class="col-12 col-md-8">
+              <label for="asset-name" class="form-label small fw-semibold text-dark">Nombre del Activo *</label>
+              <input
+                type="text"
+                id="asset-name"
+                formControlName="name"
+                class="form-control"
+                [class.is-invalid]="assetForm.get('name')?.touched && assetForm.get('name')?.invalid"
+                placeholder="Ej. Generador Honda 8500W / Salón Los Olivos"
+              />
+              @if (assetForm.get('name')?.touched && assetForm.get('name')?.invalid) {
+                <div class="text-danger small mt-1">El nombre es requerido (mín. 3 caracteres).</div>
+              }
+            </div>
+
+            <!-- Categoría -->
+            <div class="col-12 col-md-4">
+              <label for="asset-cat" class="form-label small fw-semibold text-dark">Categoría</label>
+              <select id="asset-cat" formControlName="category_id" class="form-select">
+                <option [ngValue]="null">Sin categoría</option>
+                @for (cat of categories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Número de Serie / Placa -->
+            <div class="col-12 col-md-6">
+              <label for="asset-serial" class="form-label small fw-semibold text-dark">Número de Serie / Identificador</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted"><i class="bi bi-upc"></i></span>
+                <input
+                  type="text"
+                  id="asset-serial"
+                  formControlName="serial_number"
+                  class="form-control"
+                  placeholder="Ej. SN-8841-A / Placas ABC-123"
+                />
+              </div>
+            </div>
+
+            <!-- Ubicación -->
+            <div class="col-12 col-md-6">
+              <label for="asset-loc" class="form-label small fw-semibold text-dark">Ubicación / Almacén</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted"><i class="bi bi-geo-alt"></i></span>
+                <input
+                  type="text"
+                  id="asset-loc"
+                  formControlName="location"
+                  class="form-control"
+                  placeholder="Ej. Bodega 2, Rack C / Sucursal Centro"
+                />
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="col-12">
+              <label for="asset-desc" class="form-label small fw-semibold text-dark">Descripción Pública (Para contratos/cotizaciones)</label>
+              <textarea
+                id="asset-desc"
+                formControlName="description"
+                rows="3"
+                class="form-control"
+                placeholder="Detalla las características, medidas o especificaciones técnicas..."
+              ></textarea>
+            </div>
+
+            <!-- Notas Internas -->
+            <div class="col-12">
+              <label for="asset-notes" class="form-label small fw-semibold text-dark">Notas Internas (Privadas)</label>
+              <textarea
+                id="asset-notes"
+                formControlName="notes"
+                rows="2"
+                class="form-control"
+                placeholder="Observaciones de mantenimiento, daños previos, etc."
+              ></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tarifas y Depósito -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <h5 class="fw-bold text-dark mb-4">Tarifas y Depósito de Garantía</h5>
+
+          <div class="row g-3">
+            <!-- Tarifa Diaria -->
+            <div class="col-12 col-sm-6 col-md-3">
+              <label for="rate-day" class="form-label small fw-semibold text-dark">Tarifa por Día ($ MXN) *</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="rate-day"
+                  formControlName="daily_rate"
+                  class="form-control"
+                  [class.is-invalid]="assetForm.get('daily_rate')?.touched && assetForm.get('daily_rate')?.invalid"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <!-- Tarifa Semanal -->
+            <div class="col-12 col-sm-6 col-md-3">
+              <label for="rate-week" class="form-label small fw-semibold text-dark">Tarifa por Semana</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="rate-week"
+                  formControlName="weekly_rate"
+                  class="form-control"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <!-- Tarifa Mensual -->
+            <div class="col-12 col-sm-6 col-md-3">
+              <label for="rate-month" class="form-label small fw-semibold text-dark">Tarifa por Mes</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="rate-month"
+                  formControlName="monthly_rate"
+                  class="form-control"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <!-- Depósito en Garantía -->
+            <div class="col-12 col-sm-6 col-md-3">
+              <label for="deposit" class="form-label small fw-semibold text-dark">Depósito en Garantía</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="deposit"
+                  formControlName="deposit"
+                  class="form-control"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Columna Derecha: Estado, Foto y Acciones -->
+      <div class="col-12 col-lg-4">
+        
+        <!-- Estado del Activo -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h6 class="fw-bold text-dark mb-3">Estado Operativo</h6>
+          
+          <select formControlName="status" class="form-select mb-2">
+            <option value="available">🟢 Disponible para Renta</option>
+            <option value="rented">🔵 En Renta Activa</option>
+            <option value="maintenance">🟠 En Mantenimiento / Taller</option>
+            <option value="inactive">⚪ Inactivo / No Disponible</option>
+          </select>
+          <small class="text-muted">Solo los activos "Disponibles" se pueden asignar a nuevas rentas.</small>
+        </div>
+
+        <!-- Fotografía del Activo -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h6 class="fw-bold text-dark mb-3">Fotografía</h6>
+
+          <div class="photo-upload-container mb-3 text-center">
+            @if (photoPreview()) {
+              <img [src]="photoPreview()" class="img-fluid rounded-3 object-fit-cover w-100" style="max-height: 200px;" />
+            } @else if (uploadedPhotos().length > 0) {
+              <img [src]="uploadedPhotos()[0]" class="img-fluid rounded-3 object-fit-cover w-100" style="max-height: 200px;" />
+            } @else {
+              <div class="upload-placeholder p-4 border border-dashed rounded-3 bg-light">
+                <i class="bi bi-camera fs-2 text-muted"></i>
+                <p class="small text-muted mb-0 mt-2">Ninguna foto seleccionada</p>
+              </div>
+            }
+          </div>
+
+          <label class="btn btn-outline-primary btn-sm w-100 mb-0">
+            <i class="bi bi-upload me-1"></i> Seleccionar Imagen
+            <input type="file" (change)="onFileSelected($event)" accept="image/jpeg,image/png,image/webp" hidden />
+          </label>
+        </div>
+
+        <!-- Guardar / Cancelar -->
+        <div class="d-grid gap-2">
+          <button
+            type="submit"
+            class="btn btn-primary py-2 fw-semibold shadow-sm d-flex align-items-center justify-content-center"
+            [disabled]="saving()"
+          >
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Guardando activo...
+            } @else {
+              <i class="bi bi-check2-circle me-2"></i>
+              {{ isEditMode() ? 'Guardar Cambios' : 'Crear Activo' }}
+            }
+          </button>
+
+          <a routerLink="/assets" class="btn btn-light py-2 text-muted">
+            Cancelar
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </form>
+
+</div>

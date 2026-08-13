@@ -1,0 +1,21 @@
+// ==========================================================================
+// Rentame Admin — Main Styles Entry Point
+// ==========================================================================
+
+// 1. Design Tokens (debe ir primero para que Bootstrap los tome)
+@use './styles/variables' as *;
+
+// 2. Bootstrap con nuestras variables ya cargadas
+@use 'bootstrap/scss/bootstrap' as *;
+
+// 3. Bootstrap Icons
+@use 'bootstrap-icons/font/bootstrap-icons' as *;
+
+// 4. Typography
+@use './styles/typography' as *;
+
+// 5. Components
+@use './styles/components' as *;
+
+// 6. Utilities
+@use './styles/utilities' as *;

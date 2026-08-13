@@ -1,0 +1,17 @@
+.nav-pills {
+  .nav-link {
+    color: #64748b;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-weight: 500;
+
+    &.active {
+      background-color: #2563eb;
+      color: #ffffff;
+    }
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

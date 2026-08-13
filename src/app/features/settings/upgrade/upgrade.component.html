@@ -1,0 +1,115 @@
+<div class="container py-5 rm-page-enter">
+  
+  <div class="text-center mb-5">
+    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-3">
+      ⭐ Membresía Profesional Rentame
+    </span>
+    <h1 class="display-6 fw-bold text-dark mb-2">Lleva tu negocio de rentas al siguiente nivel</h1>
+    <p class="text-muted mx-auto" style="max-width: 600px;">
+      Elimina todas las restricciones de inventario y clientes. Automatiza tu cobranza con reportes financieros y contratos PDF personalizados.
+    </p>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+    
+    <!-- Free Tier Recap -->
+    <div class="col-12 col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="fw-bold text-dark mb-0">Plan Gratuito</h4>
+          <span class="badge bg-secondary-subtle text-secondary">Básico</span>
+        </div>
+        <div class="display-6 fw-bold text-dark mb-3">$0 <span class="fs-6 text-muted font-normal">/ para siempre</span></div>
+        <p class="text-muted small mb-4">Para emprendedores que están iniciando en la renta de bienes y equipos.</p>
+
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-4">
+          <li class="d-flex align-items-center gap-2 small">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>Hasta 3 activos registrados</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>Hasta 10 clientes</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>20 rentas por mes</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small text-muted">
+            <i class="bi bi-x-circle text-muted"></i>
+            <span>Sin acceso a reportes financieros</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small text-muted">
+            <i class="bi bi-x-circle text-muted"></i>
+            <span>Sin semáforo de cobranza avanzada</span>
+          </li>
+        </ul>
+
+        <div class="mt-auto">
+          <a routerLink="/dashboard" class="btn btn-outline-secondary w-100 py-2">Continuar con Free</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pro Tier -->
+    <div class="col-12 col-lg-5">
+      <div class="card border-2 border-primary shadow-lg rounded-4 p-4 h-100 bg-white position-relative">
+        <span class="position-absolute top-0 end-0 translate-middle-y me-4 badge bg-primary px-3 py-2 rounded-pill shadow-sm">
+          Más Popular
+        </span>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="fw-bold text-primary mb-0">Plan Pro</h4>
+          <span class="badge bg-primary text-white">Todo Ilimitado</span>
+        </div>
+        <div class="display-6 fw-bold text-primary mb-3">$499 <span class="fs-6 text-muted font-normal">MXN / mes</span></div>
+        <p class="text-muted small mb-4">Para empresas y negocios que requieren control financiero total y escalabilidad.</p>
+
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-4">
+          <li class="d-flex align-items-center gap-2 small fw-semibold text-dark">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <span>Activos e Inventario ILIMITADO</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small fw-semibold text-dark">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <span>Cartera de Clientes ILIMITADA</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small fw-semibold text-dark">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <span>Contratos de Renta ILIMITADOS</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small fw-semibold text-dark">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <span>Reportes Financieros (Utilidades y Balance)</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small fw-semibold text-dark">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <span>Semáforo de Cuentas por Cobrar y Morosidad</span>
+          </li>
+          <li class="d-flex align-items-center gap-2 small fw-semibold text-dark">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <span>Exportación Oficial de Reportes en PDF</span>
+          </li>
+        </ul>
+
+        <div class="mt-auto">
+          <button
+            class="btn btn-primary w-100 py-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2"
+            (click)="confirmUpgrade()"
+            [disabled]="upgrading()"
+          >
+            @if (upgrading()) {
+              <span class="spinner-border spinner-border-sm" role="status"></span>
+              <span>Activando Plan Pro...</span>
+            } @else {
+              <i class="bi bi-stars"></i>
+              <span>Activar Plan Pro Ahora</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

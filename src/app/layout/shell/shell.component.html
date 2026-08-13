@@ -1,0 +1,200 @@
+<div class="rm-layout">
+  
+  <!-- Sidebar Backdrop (Mobile) -->
+  @if (isSidebarOpen()) {
+    <div class="rm-sidebar-backdrop" (click)="closeSidebar()"></div>
+  }
+
+  <!-- Sidebar Navigation -->
+  <aside class="rm-sidebar" [class.show]="isSidebarOpen()">
+    
+    <!-- Brand Header -->
+    <div class="rm-sidebar-brand d-flex align-items-center justify-content-between">
+      <a routerLink="/dashboard" class="d-flex align-items-center gap-2 text-decoration-none" (click)="closeSidebar()">
+        <div class="rm-logo-icon">
+          <i class="bi bi-key-fill"></i>
+        </div>
+        <span class="rm-logo-text">Rentame</span>
+      </a>
+      <button class="btn btn-sm text-white d-lg-none" (click)="closeSidebar()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="rm-sidebar-nav">
+      <ul class="list-unstyled mb-0 d-flex flex-column gap-1">
+        
+        <li>
+          <a routerLink="/dashboard" routerLinkActive="active" class="rm-nav-item" (click)="closeSidebar()">
+            <i class="bi bi-speedometer2 rm-nav-icon"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/assets" routerLinkActive="active" class="rm-nav-item" (click)="closeSidebar()">
+            <i class="bi bi-box-seam rm-nav-icon"></i>
+            <span>Activos e Inventario</span>
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/customers" routerLinkActive="active" class="rm-nav-item" (click)="closeSidebar()">
+            <i class="bi bi-people rm-nav-icon"></i>
+            <span>Clientes</span>
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/rentals" routerLinkActive="active" class="rm-nav-item" (click)="closeSidebar()">
+            <i class="bi bi-key rm-nav-icon"></i>
+            <span>Contratos de Renta</span>
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/payments" routerLinkActive="active" class="rm-nav-item" (click)="closeSidebar()">
+            <i class="bi bi-cash-stack rm-nav-icon"></i>
+            <span>Cobranza e Ingresos</span>
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/expenses" routerLinkActive="active" class="rm-nav-item" (click)="closeSidebar()">
+            <i class="bi bi-tools rm-nav-icon"></i>
+            <span>Egresos y Mant.</span>
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/reports" routerLinkActive="active" class="rm-nav-item" (click)="closeSidebar()">
+            <i class="bi bi-bar-chart rm-nav-icon"></i>
+            <span>Reportes Financieros</span>
+            @if (!isPro()) {
+              <span class="badge bg-warning text-dark extra-small ms-auto">PRO</span>
+            }
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/settings" routerLinkActive="active" class="rm-nav-item" (click)="closeSidebar()">
+            <i class="bi bi-gear rm-nav-icon"></i>
+            <span>Configuración</span>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+
+    <!-- Sidebar Footer / Plan & User -->
+    <div class="rm-sidebar-footer">
+      @if (!isPro()) {
+        <div class="p-3 mb-3 rounded-3 bg-dark border border-secondary text-center">
+          <small class="text-white-50 d-block mb-2">Estás en el Plan Gratuito</small>
+          <a routerLink="/settings/upgrade" class="btn btn-primary btn-sm w-100 fw-bold" (click)="closeSidebar()">
+            <i class="bi bi-stars me-1"></i> Mejorar a Pro
+          </a>
+        </div>
+      }
+
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2 overflow-hidden">
+          <div class="rm-user-avatar">
+            {{ currentUser()?.name?.charAt(0) || 'U' }}
+          </div>
+          <div class="text-truncate">
+            <div class="small fw-bold text-white text-truncate">{{ currentUser()?.name }}</div>
+            <span class="badge rounded-pill extra-small {{ isPro() ? 'bg-primary' : 'bg-secondary' }}">
+              {{ isPro() ? 'Pro' : 'Gratis' }}
+            </span>
+          </div>
+        </div>
+
+        <button class="btn btn-sm btn-outline-danger rounded-circle" (click)="logout()" title="Cerrar Sesión">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="rm-main-wrapper">
+    
+    <!-- Topbar -->
+    <header class="rm-topbar d-flex align-items-center justify-content-between px-3 px-lg-4">
+      
+      <!-- Mobile Toggle Button -->
+      <button class="btn btn-light d-lg-none shadow-sm rounded-circle" (click)="toggleSidebar()">
+        <i class="bi bi-list fs-5"></i>
+      </button>
+
+      <div class="d-none d-lg-block">
+        <span class="text-muted small">Sistema Integral de Gestión de Rentas</span>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="d-flex align-items-center gap-3 position-relative">
+        
+        <!-- Notifications Bell -->
+        <button
+          class="btn btn-light rounded-circle position-relative shadow-sm"
+          (click)="toggleNotifications()"
+          title="Notificaciones"
+        >
+          <i class="bi bi-bell"></i>
+          @if (unreadCount() > 0) {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {{ unreadCount() }}
+            </span>
+          }
+        </button>
+
+        <!-- Notifications Dropdown Popover -->
+        @if (isNotificationsOpen()) {
+          <div class="rm-notifications-popover shadow-lg rounded-4 overflow-hidden">
+            <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+              <h6 class="fw-bold text-dark mb-0">Notificaciones</h6>
+              @if (unreadCount() > 0) {
+                <button class="btn btn-link btn-sm text-primary p-0 text-decoration-none" (click)="markAllNotificationsRead()">
+                  Marcar leídas
+                </button>
+              }
+            </div>
+
+            <div class="rm-notifications-list">
+              @if (notifications().length === 0) {
+                <div class="text-center py-4 text-muted small">
+                  <i class="bi bi-bell-slash fs-4 d-block mb-1"></i>
+                  No tienes notificaciones pendientes
+                </div>
+              }
+              @for (n of notifications(); track n.id) {
+                <div class="p-3 border-bottom {{ n.read_at ? 'bg-white' : 'bg-primary-subtle' }}">
+                  <div class="fw-bold text-dark small">{{ n.title }}</div>
+                  <div class="text-muted extra-small mt-1">{{ n.message }}</div>
+                  <div class="text-muted extra-small mt-1">{{ n.created_at | date:'short' }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Logout Button -->
+        <button class="btn btn-light rounded-circle shadow-sm" (click)="logout()" title="Cerrar Sesión">
+          <i class="bi bi-power text-danger"></i>
+        </button>
+
+      </div>
+
+    </header>
+
+    <!-- Page Content View -->
+    <main class="rm-content-area" (click)="closeNotifications()">
+      <router-outlet />
+    </main>
+
+  </div>
+
+</div>

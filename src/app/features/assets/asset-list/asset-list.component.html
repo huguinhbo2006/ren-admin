@@ -1,0 +1,315 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Top Action Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="rm-page-title">Catálogo de Activos</h1>
+      <p class="text-muted small mb-0">Gestiona los bienes disponibles para renta, tarifas y mantenimientos</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+      <!-- Plan Limit Bar for Free Plan -->
+      @if (isFreePlan()) {
+        <div class="plan-counter-pill bg-white border rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-2">
+          <span class="small fw-semibold text-muted">Límite Plan Free:</span>
+          <span class="badge" [class.bg-danger]="limitReached()" [class.bg-primary]="!limitReached()">
+            {{ assetCount() }} / {{ maxAssets() }}
+          </span>
+          @if (limitReached()) {
+            <a routerLink="/upgrade" class="btn btn-warning btn-xs rounded-pill py-0 px-2 fw-bold text-dark text-decoration-none">
+              <i class="bi bi-lightning-fill"></i> Pro
+            </a>
+          }
+        </div>
+      }
+
+      <!-- Add Button -->
+      <a
+        routerLink="/assets/new"
+        class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm"
+        [class.disabled]="limitReached()"
+      >
+        <i class="bi bi-plus-lg"></i>
+        <span>Nuevo Activo</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <div class="row g-3 align-items-center">
+        
+        <!-- Search -->
+        <div class="col-12 col-md-5">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+            <input
+              type="text"
+              class="form-control bg-light border-start-0 ps-0"
+              placeholder="Buscar por nombre, número de serie o ubicación..."
+              [ngModel]="searchTerm()"
+              (ngModelChange)="onSearchChange($event)"
+            />
+          </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <select
+            class="form-select bg-light border-0"
+            [ngModel]="selectedCategory()"
+            (ngModelChange)="selectedCategory.set($event); onFilterChange()"
+          >
+            <option value="">Todas las categorías</option>
+            @for (cat of categories(); track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <select
+            class="form-select bg-light border-0"
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="selectedStatus.set($event); onFilterChange()"
+          >
+            <option value="">Todos los estados</option>
+            <option value="available">Disponible</option>
+            <option value="rented">En Renta</option>
+            <option value="maintenance">Mantenimiento</option>
+            <option value="inactive">Inactivo</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="col-12 col-md-1 d-flex justify-content-end">
+          <button
+            class="btn btn-outline-secondary btn-sm w-100"
+            (click)="searchTerm.set(''); selectedCategory.set(''); selectedStatus.set(''); onFilterChange()"
+            title="Limpiar filtros"
+          >
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Skeletons -->
+  @if (loading()) {
+    <div class="row g-4">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+            <div class="rm-skeleton rounded-3 mb-3" style="height: 180px;"></div>
+            <div class="rm-skeleton rm-skeleton-title w-75 mb-2"></div>
+            <div class="rm-skeleton rm-skeleton-text w-50 mb-3"></div>
+            <div class="rm-skeleton rm-skeleton-text w-100 mt-auto"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && assets().length === 0) {
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+      <div class="rm-empty-state">
+        <div class="rm-empty-icon text-primary">
+          <i class="bi bi-box-seam"></i>
+        </div>
+        <h5>No se encontraron activos</h5>
+        <p class="text-muted small">
+          {{ searchTerm() || selectedCategory() || selectedStatus() ? 'Intenta ajustando los filtros de búsqueda.' : 'Comienza registrando tu primer bien para renta.' }}
+        </p>
+        @if (!limitReached()) {
+          <a routerLink="/assets/new" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i>
+            <span>Registrar Activo</span>
+          </a>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Assets Grid -->
+  @if (!loading() && assets().length > 0) {
+    <div class="row g-4">
+      @for (asset of assets(); track asset.id) {
+        <div class="col-12 col-md-6 col-lg-4">
+          <div 
+            class="card border-0 shadow-sm rounded-4 h-100 asset-card position-relative overflow-hidden cursor-pointer"
+            (click)="openDetailModal(asset)"
+          >
+            <!-- Card Image / Header -->
+            <div class="asset-image-container position-relative">
+              @if (asset.primary_image) {
+                <img [src]="asset.primary_image" [alt]="asset.name" class="asset-image w-100 object-fit-cover" />
+              } @else {
+                <div class="asset-placeholder d-flex align-items-center justify-content-center">
+                  <i class="bi bi-box-seam fs-1 text-muted opacity-50"></i>
+                </div>
+              }
+
+              <!-- Status Badge -->
+              <span class="position-absolute top-0 start-0 m-3 rm-badge-status {{ getStatusClass(asset.status) }}">
+                {{ getStatusLabel(asset.status) }}
+              </span>
+
+              <!-- Category Badge -->
+              @if (asset.category) {
+                <span class="position-absolute top-0 end-0 m-3 badge bg-dark bg-opacity-75 text-white rounded-pill px-3 py-1">
+                  {{ asset.category.name }}
+                </span>
+              }
+            </div>
+
+            <!-- Card Body -->
+            <div class="card-body p-4 d-flex flex-column">
+              <h5 class="fw-bold text-dark mb-1 text-truncate" [title]="asset.name">{{ asset.name }}</h5>
+              
+              <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+                @if (asset.serial_number) {
+                  <span><i class="bi bi-upc me-1"></i>{{ asset.serial_number }}</span>
+                }
+                @if (asset.location) {
+                  <span class="text-truncate"><i class="bi bi-geo-alt me-1"></i>{{ asset.location }}</span>
+                }
+              </div>
+
+              <!-- Rates Table Pill -->
+              <div class="rates-box p-3 rounded-3 bg-light mb-3 mt-auto">
+                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                  <span class="small text-muted">Tarifa Día:</span>
+                  <span class="fw-bold text-primary">{{ asset.daily_rate_cents | currencyMxn }}</span>
+                </div>
+                @if (asset.weekly_rate_cents) {
+                  <div class="d-flex justify-content-between align-items-baseline mb-1">
+                    <span class="small text-muted">Semana:</span>
+                    <span class="small fw-semibold text-dark">{{ asset.weekly_rate_cents | currencyMxn }}</span>
+                  </div>
+                }
+                @if (asset.monthly_rate_cents) {
+                  <div class="d-flex justify-content-between align-items-baseline">
+                    <span class="small text-muted">Mes:</span>
+                    <span class="small fw-semibold text-dark">{{ asset.monthly_rate_cents | currencyMxn }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Actions Footer -->
+              <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                <span class="small text-muted">
+                  <i class="bi bi-shield-check me-1 text-success"></i>
+                  Depósito: {{ asset.deposit_cents | currencyMxn }}
+                </span>
+                
+                <div class="d-flex gap-1" (click)="$event.stopPropagation()">
+                  <a [routerLink]="['/assets', asset.id, 'edit']" class="btn btn-sm btn-outline-secondary rounded-circle" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button class="btn btn-sm btn-outline-danger rounded-circle" (click)="deleteAsset(asset, $event)" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<!-- Quick Detail Modal Backdrop -->
+@if (selectedAsset(); as selected) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.6);" (click)="closeDetailModal()">
+    <div class="modal-dialog modal-dialog-centered modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+        
+        <div class="modal-header border-0 bg-light p-4">
+          <div>
+            <span class="rm-badge-status {{ getStatusClass(selected.status) }} mb-2">
+              {{ getStatusLabel(selected.status) }}
+            </span>
+            <h4 class="modal-title fw-bold text-dark">{{ selected.name }}</h4>
+            @if (selected.category) {
+              <span class="text-muted small">{{ selected.category.name }}</span>
+            }
+          </div>
+          <button type="button" class="btn-close" (click)="closeDetailModal()"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <div class="row g-4">
+            
+            <!-- Photos Preview -->
+            @if (selected.images && selected.images.length > 0) {
+              <div class="col-12">
+                <div class="d-flex gap-2 overflow-auto pb-2">
+                  @for (img of selected.images; track img) {
+                    <img [src]="img" class="rounded-3 object-fit-cover shadow-sm" style="height: 140px; width: 180px;" />
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="col-12 col-md-6">
+              <h6 class="fw-bold text-dark mb-2">Tarifas de Renta</h6>
+              <ul class="list-group list-group-flush rounded-3 border">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Por Día</span>
+                  <strong class="text-primary">{{ selected.daily_rate_cents | currencyMxn }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Por Semana</span>
+                  <strong>{{ selected.weekly_rate_cents | currencyMxn }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Por Mes</span>
+                  <strong>{{ selected.monthly_rate_cents | currencyMxn }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between bg-light">
+                  <span>Depósito en Garantía</span>
+                  <strong class="text-success">{{ selected.deposit_cents | currencyMxn }}</strong>
+                </li>
+              </ul>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <h6 class="fw-bold text-dark mb-2">Detalles y Ubicación</h6>
+              <p class="text-muted small mb-2">
+                <strong>Número de Serie:</strong> {{ selected.serial_number || 'N/A' }}
+              </p>
+              <p class="text-muted small mb-2">
+                <strong>Ubicación:</strong> {{ selected.location || 'No especificada' }}
+              </p>
+              <p class="text-muted small mb-2">
+                <strong>Descripción:</strong> {{ selected.description || 'Sin descripción.' }}
+              </p>
+              @if (selected.notes) {
+                <div class="alert alert-light border small mb-0">
+                  <strong>Notas internas:</strong> {{ selected.notes }}
+                </div>
+              }
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 bg-light p-3">
+          <a [routerLink]="['/assets', selected.id, 'edit']" class="btn btn-primary btn-sm px-3" (click)="closeDetailModal()">
+            <i class="bi bi-pencil me-1"></i> Editar Activo
+          </a>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeDetailModal()">Cerrar</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

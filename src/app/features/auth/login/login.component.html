@@ -1,0 +1,173 @@
+<div class="auth-page-wrapper d-flex align-items-center justify-content-center min-vh-100 py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+        
+        <!-- Logo & Header -->
+        <div class="text-center mb-4">
+          <div class="auth-brand-icon mx-auto mb-3">
+            <i class="bi bi-key-fill"></i>
+          </div>
+          <h1 class="h3 fw-bold mb-1 text-dark">Iniciar Sesión</h1>
+          <p class="text-muted small">Gestiona todas tus rentas desde un solo lugar</p>
+        </div>
+
+        <!-- Session expired notice -->
+        @if (sessionExpiredMessage()) {
+          <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div class="small">{{ sessionExpiredMessage() }}</div>
+          </div>
+        }
+
+        <!-- Error alert -->
+        @if (errorMessage()) {
+          <div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+            <i class="bi bi-x-circle-fill me-2 fs-5 flex-shrink-0"></i>
+            <div class="small">{{ errorMessage() }}</div>
+          </div>
+        }
+
+        <!-- Login Card -->
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4 p-sm-5">
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+              
+              <!-- Email Input -->
+              <div class="mb-3">
+                <label for="login-email" class="form-label small fw-semibold text-dark">
+                  Correo Electrónico
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 text-muted">
+                    <i class="bi bi-envelope"></i>
+                  </span>
+                  <input
+                    type="email"
+                    id="login-email"
+                    formControlName="email"
+                    class="form-control bg-light border-start-0 ps-0"
+                    [class.is-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+                    placeholder="ejemplo@rentame.mx"
+                    autocomplete="username"
+                  />
+                </div>
+                @if (loginForm.get('email')?.touched && loginForm.get('email')?.hasError('required')) {
+                  <div class="text-danger small mt-1">El correo electrónico es requerido.</div>
+                }
+                @if (loginForm.get('email')?.touched && loginForm.get('email')?.hasError('email')) {
+                  <div class="text-danger small mt-1">Ingresa un correo electrónico válido.</div>
+                }
+              </div>
+
+              <!-- Password Input -->
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label for="login-password" class="form-label small fw-semibold text-dark mb-0">
+                    Contraseña
+                  </label>
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 text-muted">
+                    <i class="bi bi-lock"></i>
+                  </span>
+                  <input
+                    [type]="showPassword() ? 'text' : 'password'"
+                    id="login-password"
+                    formControlName="password"
+                    class="form-control bg-light border-start-0 border-end-0 ps-0"
+                    [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    class="input-group-text bg-light border-start-0 text-muted"
+                    (click)="togglePasswordVisibility()"
+                    tabindex="-1"
+                    title="Mostrar/ocultar contraseña"
+                  >
+                    <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+                  </button>
+                </div>
+                @if (loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')) {
+                  <div class="text-danger small mt-1">La contraseña es requerida.</div>
+                }
+              </div>
+
+              <!-- Remember Me -->
+              <div class="mb-4 d-flex align-items-center justify-content-between">
+                <div class="form-check mb-0">
+                  <input
+                    type="checkbox"
+                    id="remember-me"
+                    formControlName="remember"
+                    class="form-check-input"
+                  />
+                  <label for="remember-me" class="form-check-label small text-muted">
+                    Recordar sesión
+                  </label>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <button
+                type="submit"
+                class="btn btn-primary w-100 py-2 fw-semibold d-flex align-items-center justify-content-center shadow-sm"
+                [disabled]="loading()"
+              >
+                @if (loading()) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Iniciando sesión...
+                } @else {
+                  <span>Iniciar Sesión</span>
+                  <i class="bi bi-arrow-right ms-2"></i>
+                }
+              </button>
+            </form>
+
+            <!-- Quick Demo Login Helpers -->
+            <div class="demo-logins mt-4 pt-3 border-top text-center">
+              <span class="text-muted extra-small d-block mb-2 text-uppercase fw-semibold">Acceso rápido para pruebas</span>
+              <div class="d-flex justify-content-center gap-2">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm rounded-pill"
+                  (click)="loginForm.patchValue({ email: 'admin@rentame.mx', password: 'password123' })"
+                >
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm rounded-pill"
+                  (click)="loginForm.patchValue({ email: 'pro@rentame.mx', password: 'password123' })"
+                >
+                  Pro
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm rounded-pill"
+                  (click)="loginForm.patchValue({ email: 'demo@rentame.mx', password: 'password123' })"
+                >
+                  Gratis
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Register Link -->
+        <div class="text-center mt-4">
+          <p class="small text-muted mb-0">
+            ¿Aún no tienes cuenta?
+            <a routerLink="/register" class="fw-semibold text-primary text-decoration-none ms-1">
+              Crear cuenta gratis
+            </a>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

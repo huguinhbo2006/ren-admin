@@ -1,0 +1,11 @@
+.extra-small {
+  font-size: 0.75rem;
+}
+
+.form-control, .form-select {
+  border-color: #e2e8f0;
+  &:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+}

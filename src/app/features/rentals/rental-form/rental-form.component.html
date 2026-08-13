@@ -1,0 +1,259 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Back Button & Header -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a routerLink="/rentals" class="btn btn-outline-secondary btn-sm rounded-circle" title="Regresar al listado">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h1 class="rm-page-title mb-0">Generar Nuevo Contrato de Renta</h1>
+      <p class="text-muted small mb-0">Selecciona el cliente, el activo disponible, las fechas y los servicios adicionales</p>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger d-flex align-items-center mb-4 rounded-3" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2 fs-5 flex-shrink-0"></i>
+      <div>{{ errorMessage() }}</div>
+    </div>
+  }
+
+  <form [formGroup]="rentalForm" (ngSubmit)="onSubmit()" novalidate>
+    <div class="row g-4">
+      
+      <!-- Columna Izquierda: Datos del Contrato -->
+      <div class="col-12 col-lg-8">
+        
+        <!-- Cliente y Activo -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-3">1. Partes y Bien Arrendado</h5>
+
+          <div class="row g-3">
+            <!-- Cliente -->
+            <div class="col-12 col-md-6">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="cust-select" class="form-label small fw-semibold text-dark mb-0">Cliente (Arrendatario) *</label>
+                <a routerLink="/customers/new" class="small text-primary text-decoration-none">+ Nuevo</a>
+              </div>
+              <select
+                id="cust-select"
+                formControlName="customer_id"
+                class="form-select"
+                [class.is-invalid]="rentalForm.get('customer_id')?.touched && rentalForm.get('customer_id')?.invalid"
+              >
+                <option [ngValue]="null">Selecciona un cliente...</option>
+                @for (c of customers(); track c.id) {
+                  <option [value]="c.id">{{ c.name }} ({{ c.phone }})</option>
+                }
+              </select>
+              @if (rentalForm.get('customer_id')?.touched && rentalForm.get('customer_id')?.invalid) {
+                <div class="text-danger small mt-1">Debes seleccionar un cliente.</div>
+              }
+            </div>
+
+            <!-- Activo -->
+            <div class="col-12 col-md-6">
+              <label for="asset-select" class="form-label small fw-semibold text-dark">Activo Disponible *</label>
+              <select
+                id="asset-select"
+                formControlName="asset_id"
+                class="form-select"
+                [class.is-invalid]="rentalForm.get('asset_id')?.touched && rentalForm.get('asset_id')?.invalid"
+              >
+                <option [ngValue]="null">Selecciona un activo...</option>
+                @for (a of assets(); track a.id) {
+                  <option [value]="a.id">{{ a.name }} ({{ a.daily_rate_cents | currencyMxn }}/día)</option>
+                }
+              </select>
+              @if (rentalForm.get('asset_id')?.touched && rentalForm.get('asset_id')?.invalid) {
+                <div class="text-danger small mt-1">Debes seleccionar un activo.</div>
+              }
+            </div>
+          </div>
+
+          <!-- Selected Asset Rates Preview -->
+          @if (selectedAsset(); as asset) {
+            <div class="p-3 bg-light rounded-3 mt-3 border">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong class="text-dark">{{ asset.name }}</strong>
+                  <div class="small text-muted">S/N: {{ asset.serial_number || 'N/A' }} · Ubicación: {{ asset.location || 'Almacén principal' }}</div>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-primary px-3 py-1">{{ asset.daily_rate_cents | currencyMxn }} / día</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Periodo de Renta -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-3">2. Periodo de Renta</h5>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="start-date" class="form-label small fw-semibold text-dark">Fecha de Inicio *</label>
+              <input
+                type="date"
+                id="start-date"
+                formControlName="start_date"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="end-date" class="form-label small fw-semibold text-dark">Fecha de Devolución *</label>
+              <input
+                type="date"
+                id="end-date"
+                formControlName="end_date"
+                class="form-control"
+              />
+            </div>
+          </div>
+
+          <div class="alert alert-info border-0 rounded-3 mt-3 py-2 px-3 small d-flex align-items-center gap-2 mb-0">
+            <i class="bi bi-calendar-check fs-5"></i>
+            <span>Duración calculada: <strong>{{ rentalDays() }} {{ rentalDays() === 1 ? 'día' : 'días' }}</strong></span>
+          </div>
+        </div>
+
+        <!-- Servicios Extras -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-3">3. Servicios Extras y Consumibles</h5>
+
+          @if (extraServices().length === 0) {
+            <p class="text-muted small mb-0">No hay servicios extras configurados en el catálogo.</p>
+          } @else {
+            <div class="d-flex flex-column gap-2">
+              @for (svc of extraServices(); track svc.id) {
+                <div class="d-flex align-items-center justify-content-between p-2 border rounded-3 bg-light">
+                  <div class="form-check mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      [id]="'extra-' + svc.id"
+                      (change)="onExtraToggle(svc, $event)"
+                    />
+                    <label class="form-check-label fw-semibold text-dark small" [for]="'extra-' + svc.id">
+                      {{ svc.name }}
+                    </label>
+                    <div class="small text-muted">{{ svc.price_cents | currencyMxn }} por {{ svc.unit }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Garantía y Notas -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <h5 class="fw-bold text-dark mb-3">4. Depósito, Descuento y Notas</h5>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="rent-deposit" class="form-label small fw-semibold text-dark">Depósito en Garantía ($ MXN)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="rent-deposit"
+                  formControlName="deposit"
+                  class="form-control"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="rent-discount" class="form-label small fw-semibold text-dark">Descuento Especial ($ MXN)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="rent-discount"
+                  formControlName="discount"
+                  class="form-control"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label for="rent-notes" class="form-label small fw-semibold text-dark">Notas / Observaciones del Contrato</label>
+              <textarea
+                id="rent-notes"
+                formControlName="notes"
+                rows="3"
+                class="form-control"
+                placeholder="Condiciones de entrega, lugar de recolección, etc."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Columna Derecha: Resumen Financiero Sticky -->
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 position-sticky" style="top: 20px;">
+          <h5 class="fw-bold text-dark mb-3">Resumen de Cobro</h5>
+
+          <ul class="list-group list-group-flush mb-4">
+            <li class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Renta base ({{ rentalDays() }} días):</span>
+              <strong class="text-dark">{{ baseAmountCents() | currencyMxn }}</strong>
+            </li>
+            @if (extrasTotalCents() > 0) {
+              <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                <span class="text-muted">Servicios extras:</span>
+                <strong class="text-dark">{{ extrasTotalCents() | currencyMxn }}</strong>
+              </li>
+            }
+            @if ((rentalForm.get('deposit')?.value || 0) > 0) {
+              <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                <span class="text-muted">Depósito en garantía:</span>
+                <strong class="text-dark">{{ (rentalForm.get('deposit')?.value * 100) | currencyMxn }}</strong>
+              </li>
+            }
+            @if ((rentalForm.get('discount')?.value || 0) > 0) {
+              <li class="list-group-item d-flex justify-content-between px-0 py-2 text-success">
+                <span>Descuento:</span>
+                <strong>-{{ (rentalForm.get('discount')?.value * 100) | currencyMxn }}</strong>
+              </li>
+            }
+            <li class="list-group-item d-flex justify-content-between px-0 pt-3 border-top fw-bold h5 text-primary mb-0">
+              <span>Total Contrato:</span>
+              <span>{{ totalCalculatedCents() | currencyMxn }}</span>
+            </li>
+          </ul>
+
+          <div class="d-grid gap-2">
+            <button
+              type="submit"
+              class="btn btn-primary py-2 fw-semibold shadow-sm d-flex align-items-center justify-content-center"
+              [disabled]="saving()"
+            >
+              @if (saving()) {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <span>Generando contrato...</span>
+              } @else {
+                <i class="bi bi-check2-circle me-2"></i>
+                <span>Confirmar y Crear Renta</span>
+              }
+            </button>
+            <a routerLink="/rentals" class="btn btn-light py-2 text-muted">Cancelar</a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+</div>

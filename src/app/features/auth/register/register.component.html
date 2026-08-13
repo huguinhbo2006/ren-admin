@@ -1,0 +1,223 @@
+<div class="auth-page-wrapper d-flex align-items-center justify-content-center min-vh-100 py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+        
+        <!-- Logo & Header -->
+        <div class="text-center mb-4">
+          <div class="auth-brand-icon mx-auto mb-3">
+            <i class="bi bi-person-plus-fill"></i>
+          </div>
+          <h1 class="h3 fw-bold mb-1 text-dark">Crear Cuenta en Rentame</h1>
+          <p class="text-muted small">Comienza gratis y escala tu negocio de rentas</p>
+        </div>
+
+        <!-- Error alert -->
+        @if (errorMessage()) {
+          <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-x-circle-fill me-2 fs-5 flex-shrink-0"></i>
+            <div class="small">{{ errorMessage() }}</div>
+          </div>
+        }
+
+        <!-- Register Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-body p-4 p-sm-5">
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+              
+              <!-- Plan Selector -->
+              <div class="mb-4">
+                <label class="form-label small fw-semibold text-dark mb-2">Selecciona tu Plan Inicial</label>
+                <div class="row g-3">
+                  <div class="col-12 col-sm-6">
+                    <div 
+                      class="plan-card p-3 rounded-3 border text-start cursor-pointer position-relative h-100"
+                      [class.active]="selectedPlan() === 'free'"
+                      (click)="selectPlan('free')"
+                    >
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-dark">Plan Gratuito</span>
+                        <span class="badge bg-secondary-subtle text-secondary small">Sin costo</span>
+                      </div>
+                      <div class="h5 fw-bold text-primary mb-2">$0 <span class="fs-6 fw-normal text-muted">MXN / mes</span></div>
+                      <ul class="list-unstyled small text-muted mb-0">
+                        <li><i class="bi bi-check2 text-success me-1"></i> Hasta 3 activos</li>
+                        <li><i class="bi bi-check2 text-success me-1"></i> Hasta 10 clientes</li>
+                        <li><i class="bi bi-check2 text-success me-1"></i> Contratos y cobros</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <div 
+                      class="plan-card p-3 rounded-3 border text-start cursor-pointer position-relative h-100"
+                      [class.active]="selectedPlan() === 'pro'"
+                      (click)="selectPlan('pro')"
+                    >
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-dark">Plan Pro</span>
+                        <span class="badge bg-warning-subtle text-warning-emphasis small fw-bold">Recomendado</span>
+                      </div>
+                      <div class="h5 fw-bold text-primary mb-2">$199 <span class="fs-6 fw-normal text-muted">MXN / mes</span></div>
+                      <ul class="list-unstyled small text-muted mb-0">
+                        <li><i class="bi bi-check2 text-success me-1"></i> Activos ilimitados</li>
+                        <li><i class="bi bi-check2 text-success me-1"></i> Clientes ilimitados</li>
+                        <li><i class="bi bi-check2 text-success me-1"></i> Reportes PDF y finanzas</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="my-4 text-muted opacity-25">
+
+              <div class="row g-3">
+                <!-- Nombre -->
+                <div class="col-12 col-sm-6">
+                  <label for="reg-name" class="form-label small fw-semibold text-dark">Nombre Completo o Empresa</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                    <input
+                      type="text"
+                      id="reg-name"
+                      formControlName="name"
+                      class="form-control bg-light border-start-0 ps-0"
+                      [class.is-invalid]="registerForm.get('name')?.touched && registerForm.get('name')?.invalid"
+                      placeholder="Ej. Arrendadora del Norte"
+                    />
+                  </div>
+                  @if (registerForm.get('name')?.touched && registerForm.get('name')?.hasError('required')) {
+                    <div class="text-danger small mt-1">El nombre es requerido.</div>
+                  }
+                </div>
+
+                <!-- Email -->
+                <div class="col-12 col-sm-6">
+                  <label for="reg-email" class="form-label small fw-semibold text-dark">Correo Electrónico</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                    <input
+                      type="email"
+                      id="reg-email"
+                      formControlName="email"
+                      class="form-control bg-light border-start-0 ps-0"
+                      [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+                      placeholder="contacto@empresa.mx"
+                    />
+                  </div>
+                  @if (registerForm.get('email')?.touched && registerForm.get('email')?.hasError('required')) {
+                    <div class="text-danger small mt-1">El correo es requerido.</div>
+                  }
+                  @if (registerForm.get('email')?.touched && registerForm.get('email')?.hasError('email')) {
+                    <div class="text-danger small mt-1">Ingresa un correo válido.</div>
+                  }
+                </div>
+
+                <!-- Teléfono -->
+                <div class="col-12">
+                  <label for="reg-phone" class="form-label small fw-semibold text-dark">Teléfono de Contacto (Opcional)</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
+                    <input
+                      type="tel"
+                      id="reg-phone"
+                      formControlName="phone"
+                      class="form-control bg-light border-start-0 ps-0"
+                      placeholder="55 1234 5678"
+                    />
+                  </div>
+                </div>
+
+                <!-- Contraseña -->
+                <div class="col-12 col-sm-6">
+                  <label for="reg-pass" class="form-label small fw-semibold text-dark">Contraseña (Mín. 8 caracteres)</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                    <input
+                      [type]="showPassword() ? 'text' : 'password'"
+                      id="reg-pass"
+                      formControlName="password"
+                      class="form-control bg-light border-start-0 border-end-0 ps-0"
+                      [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      class="input-group-text bg-light border-start-0 text-muted"
+                      (click)="togglePasswordVisibility()"
+                      tabindex="-1"
+                    >
+                      <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+                    </button>
+                  </div>
+                  @if (registerForm.get('password')?.touched && registerForm.get('password')?.hasError('minlength')) {
+                    <div class="text-danger small mt-1">Mínimo 8 caracteres.</div>
+                  }
+                </div>
+
+                <!-- Confirmar Contraseña -->
+                <div class="col-12 col-sm-6">
+                  <label for="reg-pass-confirm" class="form-label small fw-semibold text-dark">Confirmar Contraseña</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-shield-check"></i></span>
+                    <input
+                      [type]="showPassword() ? 'text' : 'password'"
+                      id="reg-pass-confirm"
+                      formControlName="password_confirmation"
+                      class="form-control bg-light border-start-0 ps-0"
+                      [class.is-invalid]="registerForm.hasError('passwordMismatch') && registerForm.get('password_confirmation')?.touched"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  @if (registerForm.hasError('passwordMismatch') && registerForm.get('password_confirmation')?.touched) {
+                    <div class="text-danger small mt-1">Las contraseñas no coinciden.</div>
+                  }
+                </div>
+
+              </div>
+
+              <!-- Terms -->
+              <div class="form-check mt-4 mb-4">
+                <input
+                  type="checkbox"
+                  id="reg-terms"
+                  formControlName="terms"
+                  class="form-check-input"
+                  [class.is-invalid]="registerForm.get('terms')?.touched && registerForm.get('terms')?.invalid"
+                />
+                <label for="reg-terms" class="form-check-label small text-muted">
+                  Acepto los términos del servicio y las políticas de privacidad de Rentame.
+                </label>
+              </div>
+
+              <!-- Submit -->
+              <button
+                type="submit"
+                class="btn btn-primary w-100 py-2 fw-semibold d-flex align-items-center justify-content-center shadow-sm"
+                [disabled]="loading()"
+              >
+                @if (loading()) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  Creando cuenta...
+                } @else {
+                  <span>Crear Cuenta Gratis</span>
+                  <i class="bi bi-arrow-right ms-2"></i>
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Login Link -->
+        <div class="text-center">
+          <p class="small text-muted mb-0">
+            ¿Ya tienes una cuenta registrada?
+            <a routerLink="/login" class="fw-semibold text-primary text-decoration-none ms-1">
+              Inicia sesión aquí
+            </a>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

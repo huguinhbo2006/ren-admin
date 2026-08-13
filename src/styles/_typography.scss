@@ -1,0 +1,75 @@
+// =============================================================================
+// Rentame Admin — Typography
+// =============================================================================
+
+// Inter cargada desde index.html via Google Fonts
+// Aquí definimos el sistema tipográfico completo
+
+// Scale tipográfica (modular scale 1.25)
+// xs: 12px | sm: 13px | base: 15px | md: 17px | lg: 19px | xl: 23px | 2xl: 29px
+
+h1, .h1 { font-size: clamp(1.5rem, 2.5vw, 1.875rem); }
+h2, .h2 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
+h3, .h3 { font-size: clamp(1.1rem, 1.8vw, 1.25rem); }
+h4, .h4 { font-size: 1.0625rem; }
+h5, .h5 { font-size: 0.9375rem; }
+h6, .h6 { font-size: 0.875rem; }
+
+// Page title (H1 de cada sección)
+.rm-page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--rm-text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 0;
+}
+
+// Section titles
+.rm-section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rm-text-muted);
+  margin-bottom: 1rem;
+}
+
+// Label / Caption
+.rm-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rm-text-muted);
+}
+
+// Monto / Valor numérico destacado
+.rm-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.rm-amount-sm {
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+// Código / Folio
+.rm-folio {
+  font-family: var(--rm-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--rm-text-muted);
+  letter-spacing: 0.04em;
+}
+
+// Text utilities adicionales
+.text-balance { text-wrap: balance; }
+.text-primary-dark { color: var(--rm-primary-dk) !important; }
+.fw-medium { font-weight: 500 !important; }
+.fw-semibold { font-weight: 600 !important; }

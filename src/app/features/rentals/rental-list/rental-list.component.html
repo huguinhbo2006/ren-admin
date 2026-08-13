@@ -1,0 +1,307 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Header & New Rental Button -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="rm-page-title">Contratos de Renta</h1>
+      <p class="text-muted small mb-0">Gestiona los contratos activos, entregas pendientes, cobranza y contratos PDF</p>
+    </div>
+
+    <a routerLink="/rentals/new" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm">
+      <i class="bi bi-key-fill"></i>
+      <span>Nueva Renta</span>
+    </a>
+  </div>
+
+  <!-- Filters Toolbar -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <div class="row g-3 align-items-center">
+        
+        <!-- Status Filter -->
+        <div class="col-12 col-md-5">
+          <select
+            class="form-select bg-light border-0"
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="selectedStatus.set($event); onFilterChange()"
+          >
+            <option value="">Todos los estados operativos</option>
+            <option value="active">🟢 En curso / Activas</option>
+            <option value="completed">🔵 Completadas / Devueltas</option>
+            <option value="cancelled">⚪ Canceladas</option>
+          </select>
+        </div>
+
+        <!-- Payment Status Filter -->
+        <div class="col-12 col-md-5">
+          <select
+            class="form-select bg-light border-0"
+            [ngModel]="selectedPaymentStatus()"
+            (ngModelChange)="selectedPaymentStatus.set($event); onFilterChange()"
+          >
+            <option value="">Todos los estados de pago</option>
+            <option value="unpaid">🔴 Sin pagar (Pendientes)</option>
+            <option value="partial">🟠 Pago parcial</option>
+            <option value="paid">🟢 Pagado totalmente</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="col-12 col-md-2 d-flex justify-content-end">
+          <button
+            class="btn btn-outline-secondary btn-sm w-100"
+            (click)="selectedStatus.set(''); selectedPaymentStatus.set(''); onFilterChange()"
+            title="Limpiar filtros"
+          >
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Skeletons -->
+  @if (loading()) {
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+          <div class="w-50">
+            <div class="rm-skeleton rm-skeleton-title w-75 mb-2"></div>
+            <div class="rm-skeleton rm-skeleton-text w-50"></div>
+          </div>
+          <div class="rm-skeleton rm-skeleton-text w-25"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && rentals().length === 0) {
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+      <div class="rm-empty-state">
+        <div class="rm-empty-icon text-primary">
+          <i class="bi bi-key"></i>
+        </div>
+        <h5>No hay rentas registradas</h5>
+        <p class="text-muted small">
+          {{ selectedStatus() || selectedPaymentStatus() ? 'Intenta seleccionando otros filtros.' : 'Genera tu primer contrato de renta para comenzar.' }}
+        </p>
+        <a routerLink="/rentals/new" class="btn btn-primary d-inline-flex align-items-center gap-2">
+          <i class="bi bi-key-fill"></i>
+          <span>Registrar Renta</span>
+        </a>
+      </div>
+    </div>
+  }
+
+  <!-- Rentals Table -->
+  @if (!loading() && rentals().length > 0) {
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr class="small text-muted text-uppercase">
+              <th class="ps-4">Folio</th>
+              <th>Cliente</th>
+              <th>Activo</th>
+              <th>Periodo</th>
+              <th class="text-end">Total</th>
+              <th class="text-end">Saldo Pendiente</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center">Cobranza</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rental of rentals(); track rental.id) {
+              <tr class="cursor-pointer" (click)="openDetail(rental)">
+                
+                <!-- Folio -->
+                <td class="ps-4">
+                  <span class="fw-bold text-primary">{{ rental.folio }}</span>
+                </td>
+
+                <!-- Cliente -->
+                <td>
+                  <div class="fw-bold text-dark">{{ rental.customer?.name }}</div>
+                  <small class="text-muted">{{ rental.customer?.phone }}</small>
+                </td>
+
+                <!-- Activo -->
+                <td>
+                  <span class="text-dark fw-semibold">{{ rental.asset?.name }}</span>
+                </td>
+
+                <!-- Periodo -->
+                <td>
+                  <div class="small text-dark">{{ rental.start_date }} al {{ rental.end_date }}</div>
+                  @if (rental.is_overdue) {
+                    <span class="badge bg-danger rounded-pill extra-small">
+                      <i class="bi bi-exclamation-triangle me-1"></i>Vencida
+                    </span>
+                  } @else {
+                    <span class="text-muted extra-small">{{ rental.rental_days }} {{ rental.rental_days === 1 ? 'día' : 'días' }}</span>
+                  }
+                </td>
+
+                <!-- Total -->
+                <td class="text-end fw-bold text-dark">
+                  {{ rental.total_amount_cents | currencyMxn }}
+                </td>
+
+                <!-- Saldo Pendiente -->
+                <td class="text-end">
+                  @if ((rental.pending_balance_cents || 0) > 0) {
+                    <span class="badge bg-danger-subtle text-danger fw-bold">
+                      {{ rental.pending_balance_cents | currencyMxn }}
+                    </span>
+                  } @else {
+                    <span class="text-success small fw-semibold">
+                      <i class="bi bi-check-circle me-1"></i>Liquidado
+                    </span>
+                  }
+                </td>
+
+                <!-- Estado Operativo -->
+                <td class="text-center">
+                  <span class="badge rounded-pill px-2 py-1 {{ getStatusClass(rental.status) }}">
+                    {{ rental.status_label }}
+                  </span>
+                </td>
+
+                <!-- Estado de Pago -->
+                <td class="text-center">
+                  <span class="badge rounded-pill px-2 py-1 {{ getPaymentClass(rental.payment_status) }}">
+                    {{ rental.payment_status_label }}
+                  </span>
+                </td>
+
+                <!-- Acciones -->
+                <td class="text-end pe-4" (click)="$event.stopPropagation()">
+                  <div class="btn-group btn-group-sm">
+                    <button
+                      class="btn btn-outline-primary rounded-circle me-1"
+                      (click)="downloadPdf(rental, $event)"
+                      title="Descargar Contrato PDF"
+                    >
+                      <i class="bi bi-file-earmark-pdf"></i>
+                    </button>
+                    @if (rental.status === 'active') {
+                      <button
+                        class="btn btn-outline-success rounded-circle me-1"
+                        (click)="completeRental(rental, $event)"
+                        title="Finalizar Entrega y Liberar Activo"
+                      >
+                        <i class="bi bi-check2-circle"></i>
+                      </button>
+                      <button
+                        class="btn btn-outline-danger rounded-circle"
+                        (click)="cancelRental(rental, $event)"
+                        title="Cancelar Contrato"
+                      >
+                        <i class="bi bi-x-circle"></i>
+                      </button>
+                    }
+                  </div>
+                </td>
+
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>
+
+<!-- Rental Detail Modal -->
+@if (selectedRental(); as rental) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.6);" (click)="closeDetail()">
+    <div class="modal-dialog modal-dialog-centered modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+        
+        <div class="modal-header border-0 bg-light p-4">
+          <div>
+            <span class="badge rounded-pill px-2 py-1 mb-2 {{ getStatusClass(rental.status) }}">
+              {{ rental.status_label }}
+            </span>
+            <h4 class="modal-title fw-bold text-dark">Contrato {{ rental.folio }}</h4>
+          </div>
+          <button type="button" class="btn-close" (click)="closeDetail()"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <div class="row g-4">
+            
+            <!-- Cliente y Activo -->
+            <div class="col-12 col-md-6">
+              <h6 class="fw-bold text-dark mb-2">Partes del Contrato</h6>
+              <div class="p-3 bg-light rounded-3 mb-3">
+                <small class="text-muted d-block">Cliente (Arrendatario):</small>
+                <strong>{{ rental.customer?.name }}</strong>
+                <div class="small text-muted">{{ rental.customer?.phone }} · {{ rental.customer?.email }}</div>
+              </div>
+              <div class="p-3 bg-light rounded-3">
+                <small class="text-muted d-block">Bien Arrendado:</small>
+                <strong>{{ rental.asset?.name }}</strong>
+                @if (rental.asset?.serial_number) {
+                  <div class="small text-muted">S/N: {{ rental.asset?.serial_number }}</div>
+                }
+              </div>
+            </div>
+
+            <!-- Resumen Financiero -->
+            <div class="col-12 col-md-6">
+              <h6 class="fw-bold text-dark mb-2">Desglose Financiero</h6>
+              <ul class="list-group list-group-flush rounded-3 border">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Renta base ({{ rental.rental_days }} días)</span>
+                  <strong>{{ rental.base_amount_cents | currencyMxn }}</strong>
+                </li>
+                @if (rental.extras && rental.extras.length > 0) {
+                  @for (extra of rental.extras; track extra.id) {
+                    <li class="list-group-item d-flex justify-content-between small text-muted">
+                      <span>+ {{ extra.name }} (x{{ extra.quantity }})</span>
+                      <span>{{ extra.total_price_cents | currencyMxn }}</span>
+                    </li>
+                  }
+                }
+                @if (rental.deposit_cents > 0) {
+                  <li class="list-group-item d-flex justify-content-between">
+                    <span>Depósito en garantía</span>
+                    <strong>{{ rental.deposit_cents | currencyMxn }}</strong>
+                  </li>
+                }
+                @if (rental.discount_cents > 0) {
+                  <li class="list-group-item d-flex justify-content-between text-success">
+                    <span>Descuento</span>
+                    <strong>-{{ rental.discount_cents | currencyMxn }}</strong>
+                  </li>
+                }
+                <li class="list-group-item d-flex justify-content-between bg-light fw-bold">
+                  <span>Total Facturado</span>
+                  <span class="text-primary">{{ rental.total_amount_cents | currencyMxn }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between bg-light">
+                  <span class="fw-bold">Saldo Pendiente</span>
+                  <span class="fw-bold text-danger">{{ rental.pending_balance_cents | currencyMxn }}</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 bg-light p-3">
+          <button class="btn btn-outline-primary btn-sm" (click)="downloadPdf(rental, $event)">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Descargar Contrato PDF
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeDetail()">Cerrar</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

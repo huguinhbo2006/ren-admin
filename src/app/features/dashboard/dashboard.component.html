@@ -1,0 +1,261 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Header & Quick Actions -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="rm-page-title mb-1">
+        ¡Hola, {{ currentUser()?.name || 'Usuario' }}! 👋
+      </h1>
+      <p class="text-muted small mb-0">Este es el resumen operativo y financiero de tu negocio de rentas.</p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      <a routerLink="/rentals/new" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-2 shadow-sm">
+        <i class="bi bi-key-fill"></i>
+        <span>Nueva Renta</span>
+      </a>
+      <a routerLink="/assets/new" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2">
+        <i class="bi bi-plus-circle"></i>
+        <span>Nuevo Activo</span>
+      </a>
+      <a routerLink="/customers/new" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2">
+        <i class="bi bi-person-plus"></i>
+        <span>Nuevo Cliente</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading Skeletons -->
+  @if (loading()) {
+    <div class="row g-4 mb-4">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="rm-skeleton rm-skeleton-text w-50 mb-2"></div>
+            <div class="rm-skeleton rm-skeleton-title w-75 mb-0"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- KPI Stat Cards -->
+  @if (!loading() && data(); as dashboard) {
+    <div class="row g-4 mb-4">
+      
+      <!-- Ingresos del Mes -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">Ingresos del Mes</span>
+            <div class="stat-icon bg-success-subtle text-success">
+              <i class="bi bi-cash-coin"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold text-dark mb-0">{{ dashboard.monthly_income_cents | currencyMxn }}</h3>
+          <span class="text-muted extra-small mt-2">Cobros realizados este mes</span>
+        </div>
+      </div>
+
+      <!-- Rentas Activas -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">Rentas Activas</span>
+            <div class="stat-icon bg-primary-subtle text-primary">
+              <i class="bi bi-key-fill"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold text-dark mb-0">{{ dashboard.total_rentals_active }}</h3>
+          <span class="text-muted extra-small mt-2">Contratos en curso</span>
+        </div>
+      </div>
+
+      <!-- Cuentas por Cobrar -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">Por Cobrar</span>
+            <div class="stat-icon bg-warning-subtle text-warning-emphasis">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold text-warning-emphasis mb-0">{{ dashboard.accounts_receivable_cents | currencyMxn }}</h3>
+          <span class="text-muted extra-small mt-2">Saldos pendientes de clientes</span>
+        </div>
+      </div>
+
+      <!-- Egresos del Mes -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stat-card">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">Egresos / Gastos</span>
+            <div class="stat-icon bg-danger-subtle text-danger">
+              <i class="bi bi-wallet2"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold text-dark mb-0">{{ dashboard.monthly_expenses_cents | currencyMxn }}</h3>
+          <span class="text-muted extra-small mt-2">Mantenimiento y compras</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row g-4">
+      
+      <!-- Columna Principal (8/12) -->
+      <div class="col-12 col-xl-8">
+        
+        <!-- Gráfica de Finanzas -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="fw-bold text-dark mb-0">Balance Financiero (Últimos 6 Meses)</h5>
+              <p class="text-muted small mb-0">Comparativa mensual de ingresos vs egresos</p>
+            </div>
+          </div>
+
+          <div class="chart-container position-relative" style="height: 280px;">
+            <canvas #chartCanvas></canvas>
+          </div>
+        </div>
+
+        <!-- Rentas por Vencer -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="fw-bold text-dark mb-0">Rentas Próximas a Vencer</h5>
+              <p class="text-muted small mb-0">Contratos que finalizan en los próximos 7 días</p>
+            </div>
+            <a routerLink="/rentals" class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold">
+              Ver todas <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+
+          @if (dashboard.rentals_expiring_soon.length === 0) {
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-calendar-check fs-2 text-success opacity-75"></i>
+              <p class="small mt-2 mb-0">No hay contratos por vencer en los próximos 7 días.</p>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr class="small text-muted">
+                    <th>Folio</th>
+                    <th>Cliente</th>
+                    <th>Activo</th>
+                    <th>Fecha Límite</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (rental of dashboard.rentals_expiring_soon; track rental.id) {
+                    <tr>
+                      <td class="fw-bold text-primary">
+                        <a [routerLink]="['/rentals', rental.id]" class="text-decoration-none">
+                          {{ rental.folio }}
+                        </a>
+                      </td>
+                      <td>
+                        <div class="fw-semibold text-dark">{{ rental.customer.name }}</div>
+                        <small class="text-muted">{{ rental.customer.phone }}</small>
+                      </td>
+                      <td class="text-dark">{{ rental.asset.name }}</td>
+                      <td class="text-muted small">{{ rental.end_date }}</td>
+                      <td>
+                        <span class="badge rounded-pill px-2 py-1 {{ getUrgencyBadge(rental.days_remaining).class }}">
+                          {{ getUrgencyBadge(rental.days_remaining).label }}
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+        </div>
+
+      </div>
+
+      <!-- Columna Lateral (4/12) -->
+      <div class="col-12 col-xl-4">
+        
+        <!-- Disponibilidad de Activos -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-3">Estado del Inventario</h5>
+
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success p-2 rounded-circle"></span>
+                <span class="fw-semibold text-dark">Disponibles</span>
+              </div>
+              <span class="h5 fw-bold mb-0 text-success">{{ dashboard.assets_available }}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary p-2 rounded-circle"></span>
+                <span class="fw-semibold text-dark">En Renta</span>
+              </div>
+              <span class="h5 fw-bold mb-0 text-primary">{{ dashboard.assets_rented }}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning p-2 rounded-circle"></span>
+                <span class="fw-semibold text-dark">Mantenimiento</span>
+              </div>
+              <span class="h5 fw-bold mb-0 text-warning-emphasis">{{ dashboard.assets_maintenance }}</span>
+            </div>
+          </div>
+
+          <div class="mt-3 text-center">
+            <a routerLink="/assets" class="btn btn-outline-secondary btn-sm w-100">
+              Ver Catálogo Completo
+            </a>
+          </div>
+        </div>
+
+        <!-- Últimos Pagos -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark mb-0">Últimos Pagos</h5>
+            <a routerLink="/payments" class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold">
+              Ver todos <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+
+          @if (dashboard.recent_payments.length === 0) {
+            <div class="text-center py-4 text-muted">
+              <i class="bi bi-receipt fs-2 opacity-50"></i>
+              <p class="small mt-2 mb-0">No se han registrado pagos aún.</p>
+            </div>
+          } @else {
+            <div class="list-group list-group-flush">
+              @for (pay of dashboard.recent_payments; track pay.id) {
+                <div class="list-group-item px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                  <div>
+                    <div class="fw-semibold text-dark small">{{ pay.customer_name }}</div>
+                    <small class="text-muted">{{ pay.rental_folio }} · {{ pay.payment_date }}</small>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-bold text-success small">{{ pay.amount_cents | currencyMxn }}</div>
+                    <span class="badge bg-secondary-subtle text-secondary extra-small">{{ pay.method }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+        </div>
+
+      </div>
+
+    </div>
+  }
+
+</div>

@@ -1,0 +1,31 @@
+.asset-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+.asset-image-container {
+  height: 200px;
+  background-color: #f1f5f9;
+}
+
+.asset-image {
+  height: 200px;
+}
+
+.asset-placeholder {
+  height: 200px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.rates-box {
+  border: 1px solid #e2e8f0;
+}
+
+.btn-xs {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+}

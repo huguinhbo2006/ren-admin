@@ -1,0 +1,340 @@
+<div class="container-fluid py-4 rm-page-enter">
+  
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="rm-page-title">Configuración del Sistema</h1>
+      <p class="text-muted small mb-0">Personaliza la identidad de tu negocio, plantillas legales y plan de suscripción</p>
+    </div>
+  </div>
+
+  @if (successMessage()) {
+    <div class="alert alert-success d-flex align-items-center mb-4 rounded-3" role="alert">
+      <i class="bi bi-check-circle-fill me-2 fs-5 flex-shrink-0"></i>
+      <div>{{ successMessage() }}</div>
+    </div>
+  }
+
+  <!-- Tabs Navigation -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+      <ul class="nav nav-pills gap-2">
+        <li class="nav-item">
+          <button
+            class="nav-link btn-sm"
+            [class.active]="activeTab() === 'business'"
+            (click)="setTab('business')"
+          >
+            <i class="bi bi-building me-1"></i> Datos del Negocio
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link btn-sm"
+            [class.active]="activeTab() === 'contract'"
+            (click)="setTab('contract')"
+          >
+            <i class="bi bi-file-earmark-text me-1"></i> Términos de Contrato
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link btn-sm"
+            [class.active]="activeTab() === 'notifications'"
+            (click)="setTab('notifications')"
+          >
+            <i class="bi bi-bell me-1"></i> Alertas y Vencimientos
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link btn-sm"
+            [class.active]="activeTab() === 'plan'"
+            (click)="setTab('plan')"
+          >
+            <i class="bi bi-stars me-1"></i> Mi Plan y Límites
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Form for Settings Tabs -->
+  @if (activeTab() !== 'plan') {
+    <form [formGroup]="businessForm" (ngSubmit)="saveSettings()" novalidate>
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        
+        <!-- TAB 1: DATOS DEL NEGOCIO -->
+        @if (activeTab() === 'business') {
+          <h5 class="fw-bold text-dark mb-4">Identidad del Arrendador</h5>
+
+          <!-- Logo Upload Box -->
+          <div class="p-3 bg-light rounded-3 mb-4 d-flex align-items-center gap-3 border">
+            @if (settings()?.business_logo_url) {
+              <img [src]="settings()?.business_logo_url" alt="Logo" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: contain;" />
+            } @else {
+              <div class="bg-white rounded-3 border d-flex align-items-center justify-content-center text-muted" style="width: 80px; height: 80px;">
+                <i class="bi bi-image fs-3"></i>
+              </div>
+            }
+            <div>
+              <label for="logo-input" class="btn btn-outline-primary btn-sm mb-1 cursor-pointer">
+                <i class="bi bi-upload me-1"></i> Subir Logotipo
+              </label>
+              <input type="file" id="logo-input" (change)="onLogoSelected($event)" accept="image/*" class="d-none" />
+              <div class="small text-muted">Aparecerá en los contratos y recibos de pago en PDF (PNG, JPG o SVG)</div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="biz-name" class="form-label small fw-semibold text-dark">Nombre del Negocio / Razón Social *</label>
+              <input
+                type="text"
+                id="biz-name"
+                formControlName="business_name"
+                class="form-control"
+                placeholder="Ej. Arrendadora Express SA de CV"
+              />
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="biz-rfc" class="form-label small fw-semibold text-dark">RFC / Identificación Fiscal</label>
+              <input
+                type="text"
+                id="biz-rfc"
+                formControlName="business_rfc"
+                class="form-control"
+                placeholder="Ej. AEX200101XYZ"
+              />
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="biz-phone" class="form-label small fw-semibold text-dark">Teléfono de Contacto</label>
+              <input
+                type="text"
+                id="biz-phone"
+                formControlName="business_phone"
+                class="form-control"
+                placeholder="Ej. 55 1234 5678"
+              />
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="biz-addr" class="form-label small fw-semibold text-dark">Dirección / Ubicación Principal</label>
+              <input
+                type="text"
+                id="biz-addr"
+                formControlName="business_address"
+                class="form-control"
+                placeholder="Ej. Av. Central 123, Col. Centro"
+              />
+            </div>
+          </div>
+        }
+
+        <!-- TAB 2: TÉRMINOS Y PLANTILLA LEGAL -->
+        @if (activeTab() === 'contract') {
+          <h5 class="fw-bold text-dark mb-3">Cláusulas Predeterminadas de Contrato</h5>
+          <p class="text-muted small mb-4">Este texto se incluirá automáticamente en la sección de términos y condiciones de los contratos PDF que generes.</p>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label for="biz-pfx" class="form-label small fw-semibold text-dark">Prefijo de Folios de Renta</label>
+              <input
+                type="text"
+                id="biz-pfx"
+                formControlName="invoice_prefix"
+                class="form-control"
+                placeholder="RNT"
+              />
+              <div class="small text-muted mt-1">Ejemplo resultante: RNT-2026-00001</div>
+            </div>
+
+            <div class="col-12">
+              <label for="biz-terms" class="form-label small fw-semibold text-dark">Texto de Cláusulas y Condiciones</label>
+              <textarea
+                id="biz-terms"
+                formControlName="contract_template"
+                rows="6"
+                class="form-control font-monospace small"
+                placeholder="Escribe las cláusulas de arrendamiento predeterminadas..."
+              ></textarea>
+            </div>
+          </div>
+        }
+
+        <!-- TAB 3: ALERTAS Y NOTIFICACIONES -->
+        @if (activeTab() === 'notifications') {
+          <h5 class="fw-bold text-dark mb-3">Configuración de Alertas de Vencimiento</h5>
+          <p class="text-muted small mb-4">Indica con cuántos días de anticipación el sistema te alertará sobre contratos próximos a vencer.</p>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="biz-notif" class="form-label small fw-semibold text-dark">Días de Anticipación para Alerta *</label>
+              <select id="biz-notif" formControlName="notification_days_before" class="form-select">
+                <option value="1">1 día antes del vencimiento</option>
+                <option value="2">2 días antes del vencimiento</option>
+                <option value="3">3 días antes del vencimiento (Recomendado)</option>
+                <option value="5">5 días antes del vencimiento</option>
+                <option value="7">7 días antes del vencimiento</option>
+              </select>
+            </div>
+          </div>
+        }
+
+        <!-- Save Button -->
+        <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+          <button
+            type="submit"
+            class="btn btn-primary px-4 fw-semibold shadow-sm"
+            [disabled]="saving()"
+          >
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+              <span>Guardando...</span>
+            } @else {
+              <i class="bi bi-check2 me-1"></i>
+              <span>Guardar Cambios</span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </form>
+  }
+
+  <!-- TAB 4: PLAN Y SUSCRIPCIÓN -->
+  @if (activeTab() === 'plan') {
+    @if (planUsage(); as plan) {
+      
+      <!-- Current Plan Status Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-light">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+          <div>
+            <span class="badge rounded-pill px-3 py-1 mb-2 {{ plan.plan_slug === 'pro' ? 'bg-primary' : 'bg-secondary' }}">
+              Plan Actual: {{ plan.plan_name }}
+            </span>
+            <h3 class="fw-bold text-dark mb-1">
+              {{ plan.plan_slug === 'pro' ? 'Suscripción Pro Activa 🚀' : 'Plan Gratuito Limitado' }}
+            </h3>
+            <p class="text-muted small mb-0">
+              {{ plan.plan_slug === 'pro' ? 'Disfrutas de activos ilimitados, clientes ilimitados, reportes y exportaciones PDF sin restricciones.' : 'Estás usando la versión gratuita con topes de activos y rentas mensuales.' }}
+            </p>
+          </div>
+
+          @if (plan.plan_slug !== 'pro') {
+            <button class="btn btn-primary px-4 py-2 fw-semibold shadow-sm" (click)="upgradeToPro()">
+              <i class="bi bi-stars me-1"></i> Mejorar a Plan Pro
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Resource Usage Gauges -->
+      <div class="row g-4 mb-4">
+        
+        <!-- Activos -->
+        <div class="col-12 col-md-4">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="small fw-semibold text-muted">Activos Registrados</span>
+              <span class="fw-bold text-dark">{{ plan.assets.used }} / {{ plan.assets.limit === 9223372036854775807 || plan.assets.limit === 2147483647 ? '∞' : plan.assets.limit }}</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div
+                class="progress-bar bg-primary"
+                [style.width.%]="plan.assets.limit < 100 ? (plan.assets.used / plan.assets.limit) * 100 : 10"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clientes -->
+        <div class="col-12 col-md-4">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="small fw-semibold text-muted">Clientes Registrados</span>
+              <span class="fw-bold text-dark">{{ plan.customers.used }} / {{ plan.customers.limit === 9223372036854775807 || plan.customers.limit === 2147483647 ? '∞' : plan.customers.limit }}</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div
+                class="progress-bar bg-success"
+                [style.width.%]="plan.customers.limit < 100 ? (plan.customers.used / plan.customers.limit) * 100 : 10"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rentas del Mes -->
+        <div class="col-12 col-md-4">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="small fw-semibold text-muted">Rentas Este Mes</span>
+              <span class="fw-bold text-dark">{{ plan.rentals_this_month.used }} / {{ plan.rentals_this_month.limit === 9223372036854775807 || plan.rentals_this_month.limit === 2147483647 ? '∞' : plan.rentals_this_month.limit }}</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div
+                class="progress-bar bg-info"
+                [style.width.%]="plan.rentals_this_month.limit < 100 ? (plan.rentals_this_month.used / plan.rentals_this_month.limit) * 100 : 10"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Feature Comparison Table -->
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-light border-0 p-3">
+          <h6 class="fw-bold mb-0 text-dark">Comparativa de Planes Rentame</h6>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr class="small text-muted text-uppercase">
+                <th class="ps-4">Característica</th>
+                <th class="text-center">Plan Gratuito</th>
+                <th class="text-center text-primary fw-bold">Plan Pro ($499 MXN/mes)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="ps-4 fw-semibold">Límite de Activos</td>
+                <td class="text-center">Hasta 3 activos</td>
+                <td class="text-center text-primary fw-bold">Ilimitados</td>
+              </tr>
+              <tr>
+                <td class="ps-4 fw-semibold">Límite de Clientes</td>
+                <td class="text-center">Hasta 10 clientes</td>
+                <td class="text-center text-primary fw-bold">Ilimitados</td>
+              </tr>
+              <tr>
+                <td class="ps-4 fw-semibold">Rentas por Mes</td>
+                <td class="text-center">20 rentas / mes</td>
+                <td class="text-center text-primary fw-bold">Ilimitadas</td>
+              </tr>
+              <tr>
+                <td class="ps-4 fw-semibold">Contratos y Recibos PDF</td>
+                <td class="text-center text-success"><i class="bi bi-check-circle-fill"></i></td>
+                <td class="text-center text-success"><i class="bi bi-check-circle-fill"></i></td>
+              </tr>
+              <tr>
+                <td class="ps-4 fw-semibold">Reportes Financieros y Balance</td>
+                <td class="text-center text-muted"><i class="bi bi-x-circle"></i></td>
+                <td class="text-center text-primary fw-bold"><i class="bi bi-check-circle-fill"></i> Incluido</td>
+              </tr>
+              <tr>
+                <td class="ps-4 fw-semibold">Exportación de Reportes PDF</td>
+                <td class="text-center text-muted"><i class="bi bi-x-circle"></i></td>
+                <td class="text-center text-primary fw-bold"><i class="bi bi-check-circle-fill"></i> Incluido</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    }
+  }
+
+</div>
