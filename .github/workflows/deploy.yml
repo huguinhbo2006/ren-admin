@@ -26,7 +26,18 @@ jobs:
       - name: Build Production Bundle
         run: npm run build -- --configuration=production
 
-      - name: Deploy to Hostinger via SCP
+      - name: Ensure Target Directory Exists on Hostinger
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          script: |
+            mkdir -p ${{ secrets.HOSTINGER_ADMIN_PATH }}
+
+      - name: Deploy Compiled Files via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOSTINGER_SSH_HOST }}
@@ -38,3 +49,5 @@ jobs:
           target: ${{ secrets.HOSTINGER_ADMIN_PATH }}
           strip_prefix: "dist/admin/browser"
           rm: true
+          timeout: 120s
+          command_timeout: 10m
