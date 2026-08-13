@@ -215,79 +215,195 @@
 
   <!-- TAB 4: CATÁLOGOS DEL SISTEMA -->
   @if (activeTab() === 'catalogs') {
-    <div class="row g-4">
-      
-      <!-- Formulario para crear Nuevo Tipo de Gasto -->
-      <div class="col-12 col-lg-5">
-        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-          <h5 class="fw-bold text-dark mb-1">Nuevo Tipo de Gasto</h5>
-          <p class="text-muted small mb-3">Crea categorías personalizadas para clasificar tus egresos y compras</p>
-
-          <form [formGroup]="newCategoryForm" (ngSubmit)="saveCategory()">
-            <div class="mb-3">
-              <label class="form-label small fw-semibold text-dark">Nombre de la Categoría / Tipo</label>
-              <input
-                type="text"
-                formControlName="name"
-                class="form-control bg-light border-0"
-                placeholder="Ej. Impuestos, Gasolina, Refacciones, Publicidad"
-              />
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label small fw-semibold text-dark">Descripción (Opcional)</label>
-              <textarea
-                formControlName="description"
-                rows="2"
-                class="form-control bg-light border-0"
-                placeholder="Breve descripción del uso de este tipo de gasto"
-              ></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100 fw-semibold" [disabled]="newCategoryForm.invalid">
-              <i class="bi bi-plus-circle me-1"></i> Guardar Tipo de Gasto
-            </button>
-          </form>
-        </div>
+    <div class="mb-4">
+      <div class="btn-group w-100" role="group">
+        <button
+          type="button"
+          class="btn py-2 fw-semibold"
+          [class.btn-primary]="activeCatalogSubTab() === 'expense'"
+          [class.btn-outline-primary]="activeCatalogSubTab() !== 'expense'"
+          (click)="setCatalogSubTab('expense')"
+        >
+          <i class="bi bi-tools me-1"></i> Tipos de Gasto / Egresos
+        </button>
+        <button
+          type="button"
+          class="btn py-2 fw-semibold"
+          [class.btn-primary]="activeCatalogSubTab() === 'extra'"
+          [class.btn-outline-primary]="activeCatalogSubTab() !== 'extra'"
+          (click)="setCatalogSubTab('extra')"
+        >
+          <i class="bi bi-stars me-1"></i> Servicios y Cargos Extras
+        </button>
       </div>
+    </div>
 
-      <!-- Lista de Categorías de Gastos Registradas -->
-      <div class="col-12 col-lg-7">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-          <div class="card-header bg-light border-0 p-3">
-            <h6 class="fw-bold mb-0 text-dark">Catálogo de Tipos de Gasto Activos</h6>
+    @if (activeCatalogSubTab() === 'expense') {
+      <div class="row g-4">
+        <!-- Formulario para crear Nuevo Tipo de Gasto -->
+        <div class="col-12 col-lg-5">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+            <h5 class="fw-bold text-dark mb-1">Nuevo Tipo de Gasto</h5>
+            <p class="text-muted small mb-3">Crea categorías personalizadas para clasificar tus egresos y compras</p>
+
+            <form [formGroup]="newCategoryForm" (ngSubmit)="saveCategory()">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold text-dark">Nombre de la Categoría / Tipo</label>
+                <input
+                  type="text"
+                  formControlName="name"
+                  class="form-control bg-light border-0"
+                  placeholder="Ej. Impuestos, Gasolina, Refacciones, Publicidad"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small fw-semibold text-dark">Descripción (Opcional)</label>
+                <textarea
+                  formControlName="description"
+                  rows="2"
+                  class="form-control bg-light border-0"
+                  placeholder="Breve descripción del uso de este tipo de gasto"
+                ></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100 fw-semibold" [disabled]="newCategoryForm.invalid">
+                <i class="bi bi-plus-circle me-1"></i> Guardar Tipo de Gasto
+              </button>
+            </form>
           </div>
-          <div class="list-group list-group-flush">
-            @for (cat of categories(); track cat.id) {
-              <div class="list-group-item d-flex align-items-center justify-content-between p-3">
-                <div class="d-flex align-items-center gap-3">
-                  <span class="badge bg-primary-subtle text-primary p-2 rounded-circle">
-                    <i class="bi {{ cat.icon || 'bi-tag' }}"></i>
-                  </span>
+        </div>
+
+        <!-- Lista de Categorías de Gastos Registradas -->
+        <div class="col-12 col-lg-7">
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-light border-0 p-3">
+              <h6 class="fw-bold mb-0 text-dark">Catálogo de Tipos de Gasto Activos</h6>
+            </div>
+            <div class="list-group list-group-flush">
+              @for (cat of categories(); track cat.id) {
+                <div class="list-group-item d-flex align-items-center justify-content-between p-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary-subtle text-primary p-2 rounded-circle">
+                      <i class="bi {{ cat.icon || 'bi-tag' }}"></i>
+                    </span>
+                    <div>
+                      <div class="fw-bold text-dark">{{ cat.name }}</div>
+                      @if (cat.description) {
+                        <div class="text-muted small">{{ cat.description }}</div>
+                      }
+                    </div>
+                  </div>
+
                   <div>
-                    <div class="fw-bold text-dark">{{ cat.name }}</div>
-                    @if (cat.description) {
-                      <div class="text-muted small">{{ cat.description }}</div>
+                    @if (cat.user_id) {
+                      <button class="btn btn-outline-danger btn-sm rounded-circle" (click)="deleteCategory(cat, $event)" title="Eliminar categoría">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    } @else {
+                      <span class="badge bg-light text-muted border extra-small">Del Sistema</span>
                     }
                   </div>
                 </div>
-
-                <div>
-                  @if (cat.user_id) {
-                    <button class="btn btn-outline-danger btn-sm rounded-circle" (click)="deleteCategory(cat, $event)" title="Eliminar categoría">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  } @else {
-                    <span class="badge bg-light text-muted border extra-small">Del Sistema</span>
-                  }
-                </div>
-              </div>
-            }
+              }
+            </div>
           </div>
         </div>
       </div>
+    }
 
-    </div>
+    @if (activeCatalogSubTab() === 'extra') {
+      <div class="row g-4">
+        <!-- Formulario para crear Nuevo Servicio Extra -->
+        <div class="col-12 col-lg-5">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+            <h5 class="fw-bold text-dark mb-1">Nuevo Servicio Extra</h5>
+            <p class="text-muted small mb-3">Crea cargos adicionales (limpieza, flete, chofer, fianza, kit extra) para añadir a tus contratos de renta</p>
+
+            <form [formGroup]="newExtraForm" (ngSubmit)="saveExtraService()">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold text-dark">Nombre del Servicio Extra</label>
+                <input
+                  type="text"
+                  formControlName="name"
+                  class="form-control bg-light border-0"
+                  placeholder="Ej. Flete a domicilio, Sanitización profunda, Chofer"
+                />
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-6">
+                  <label class="form-label small fw-semibold text-dark">Precio ($ MXN)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    formControlName="price"
+                    class="form-control bg-light border-0"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div class="col-6">
+                  <label class="form-label small fw-semibold text-dark">Unidad de Cobro</label>
+                  <select formControlName="unit" class="form-select bg-light border-0">
+                    <option value="por servicio">por servicio</option>
+                    <option value="por evento">por evento</option>
+                    <option value="por día">por día</option>
+                    <option value="por viaje">por viaje</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small fw-semibold text-dark">Descripción (Opcional)</label>
+                <textarea
+                  formControlName="description"
+                  rows="2"
+                  class="form-control bg-light border-0"
+                  placeholder="Breve detalle de lo que incluye este servicio extra"
+                ></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100 fw-semibold" [disabled]="newExtraForm.invalid">
+                <i class="bi bi-plus-circle me-1"></i> Guardar Servicio Extra
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Lista de Servicios Extras Registrados -->
+        <div class="col-12 col-lg-7">
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-light border-0 p-3">
+              <h6 class="fw-bold mb-0 text-dark">Catálogo de Servicios Extras Activos</h6>
+            </div>
+            <div class="list-group list-group-flush">
+              @for (svc of extraServices(); track svc.id) {
+                <div class="list-group-item d-flex align-items-center justify-content-between p-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-success-subtle text-success p-2 rounded-circle fs-5">
+                      <i class="bi bi-stars"></i>
+                    </span>
+                    <div>
+                      <div class="fw-bold text-dark">{{ svc.name }}</div>
+                      <div class="text-muted small">{{ svc.price_cents / 100 }} MXN · {{ svc.unit }}</div>
+                      @if (svc.description) {
+                        <small class="text-muted extra-small d-block mt-1">{{ svc.description }}</small>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <button class="btn btn-outline-danger btn-sm rounded-circle" (click)="deleteExtraService(svc, $event)" title="Eliminar servicio extra">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
   }
 
   <!-- TAB 5: PLAN Y SUSCRIPCIÓN -->

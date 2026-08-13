@@ -21,4 +21,20 @@ export class ExtraServiceService {
       }),
     );
   }
+
+  createService(data: Partial<ExtraService>): Observable<ApiResponse<ExtraService>> {
+    return this.http.post<ApiResponse<ExtraService>>(this.api, data).pipe(
+      tap((res) => {
+        this.services.update((items) => [...items, res.data]);
+      }),
+    );
+  }
+
+  deleteService(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.api}/${id}`).pipe(
+      tap(() => {
+        this.services.update((items) => items.filter((s) => s.id !== id));
+      }),
+    );
+  }
 }

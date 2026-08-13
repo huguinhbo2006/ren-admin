@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { SettingService } from './services/setting.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ExpenseCategoryService, ExpenseCategoryItem } from '../expenses/services/expense-category.service';
+import { ExtraServiceService } from '../rentals/services/extra-service.service';
+import type { ExtraService } from '../../shared/models';
 
 @Component({
   selector: 'rm-settings',
@@ -19,14 +21,18 @@ export class SettingsComponent implements OnInit {
   readonly settingService = inject(SettingService);
   readonly authService = inject(AuthService);
   readonly categoryService = inject(ExpenseCategoryService);
+  readonly extraService = inject(ExtraServiceService);
 
   readonly activeTab = signal<'business' | 'contract' | 'notifications' | 'catalogs' | 'plan'>('business');
+  readonly activeCatalogSubTab = signal<'expense' | 'extra'>('expense');
+
   readonly saving = signal(false);
   readonly successMessage = signal<string | null>(null);
   readonly settings = this.settingService.settings;
   readonly planUsage = this.settingService.planUsage;
   readonly loading = this.settingService.loading;
   readonly categories = this.categoryService.categories;
+  readonly extraServices = this.extraService.services;
 
   readonly businessForm: FormGroup = this.fb.group({
     business_name: ['', [Validators.required]],
@@ -43,17 +49,29 @@ export class SettingsComponent implements OnInit {
     description: [''],
   });
 
+  readonly newExtraForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required]],
+    price: [0, [Validators.required, Validators.min(0)]],
+    unit: ['por servicio', [Validators.required]],
+    description: [''],
+  });
+
   ngOnInit(): void {
     this.settingService.loadSettings().subscribe((res) => {
       this.businessForm.patchValue(res.data);
     });
     this.settingService.loadPlanUsage().subscribe();
     this.categoryService.loadCategories().subscribe();
+    this.extraService.loadServices().subscribe();
   }
 
   setTab(tab: 'business' | 'contract' | 'notifications' | 'catalogs' | 'plan'): void {
     this.activeTab.set(tab);
     this.successMessage.set(null);
+  }
+
+  setCatalogSubTab(subTab: 'expense' | 'extra'): void {
+    this.activeCatalogSubTab.set(subTab);
   }
 
   onLogoSelected(event: Event): void {
@@ -82,6 +100,31 @@ export class SettingsComponent implements OnInit {
     if (confirm(`¿Eliminar la categoría de egreso "${cat.name}"?`)) {
       this.categoryService.deleteCategory(cat.id).subscribe({
         next: () => this.showSuccess('Categoría eliminada.')
+      });
+    }
+  }
+
+  saveExtraService(): void {
+    if (this.newExtraForm.invalid) return;
+    const fv = this.newExtraForm.value;
+    this.extraService.createService({
+      name: fv.name,
+      price_cents: Math.round(parseFloat(fv.price) * 100),
+      unit: fv.unit,
+      description: fv.description,
+    }).subscribe({
+      next: () => {
+        this.newExtraForm.reset({ unit: 'por servicio', price: 0 });
+        this.showSuccess('Nuevo servicio extra guardado en el catálogo.');
+      }
+    });
+  }
+
+  deleteExtraService(svc: ExtraService, event: Event): void {
+    event.stopPropagation();
+    if (confirm(`¿Eliminar el servicio extra "${svc.name}"?`)) {
+      this.extraService.deleteService(svc.id).subscribe({
+        next: () => this.showSuccess('Servicio extra eliminado.')
       });
     }
   }
