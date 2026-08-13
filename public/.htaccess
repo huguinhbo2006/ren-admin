@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Redirigir siempre a HTTPS si se accede por HTTP
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Si el archivo o directorio existe físicamente, servirlo directamente
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Enrutamiento Single Page Application (SPA) para Angular
+  # Redirigir todas las demás peticiones a index.html
+  RewriteRule ^ index.html [L]
+</IfModule>
