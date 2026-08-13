@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { RouterLink } from '@angular/router';
 import { SettingService } from './services/setting.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { ExpenseCategoryService, ExpenseCategoryItem } from '../expenses/services/expense-category.service';
 
 @Component({
   selector: 'rm-settings',
@@ -17,13 +18,15 @@ export class SettingsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   readonly settingService = inject(SettingService);
   readonly authService = inject(AuthService);
+  readonly categoryService = inject(ExpenseCategoryService);
 
-  readonly activeTab = signal<'business' | 'contract' | 'notifications' | 'plan'>('business');
+  readonly activeTab = signal<'business' | 'contract' | 'notifications' | 'catalogs' | 'plan'>('business');
   readonly saving = signal(false);
   readonly successMessage = signal<string | null>(null);
   readonly settings = this.settingService.settings;
   readonly planUsage = this.settingService.planUsage;
   readonly loading = this.settingService.loading;
+  readonly categories = this.categoryService.categories;
 
   readonly businessForm: FormGroup = this.fb.group({
     business_name: ['', [Validators.required]],
@@ -35,14 +38,20 @@ export class SettingsComponent implements OnInit {
     invoice_prefix: ['RNT'],
   });
 
+  readonly newCategoryForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.maxLength(100)]],
+    description: [''],
+  });
+
   ngOnInit(): void {
     this.settingService.loadSettings().subscribe((res) => {
       this.businessForm.patchValue(res.data);
     });
     this.settingService.loadPlanUsage().subscribe();
+    this.categoryService.loadCategories().subscribe();
   }
 
-  setTab(tab: 'business' | 'contract' | 'notifications' | 'plan'): void {
+  setTab(tab: 'business' | 'contract' | 'notifications' | 'catalogs' | 'plan'): void {
     this.activeTab.set(tab);
     this.successMessage.set(null);
   }
@@ -54,6 +63,25 @@ export class SettingsComponent implements OnInit {
         next: () => {
           this.showSuccess('Logotipo del negocio actualizado exitosamente.');
         },
+      });
+    }
+  }
+
+  saveCategory(): void {
+    if (this.newCategoryForm.invalid) return;
+    this.categoryService.createCategory(this.newCategoryForm.value).subscribe({
+      next: () => {
+        this.newCategoryForm.reset();
+        this.showSuccess('Nuevo tipo de gasto registrado en tu catálogo.');
+      }
+    });
+  }
+
+  deleteCategory(cat: ExpenseCategoryItem, event: Event): void {
+    event.stopPropagation();
+    if (confirm(`¿Eliminar la categoría de egreso "${cat.name}"?`)) {
+      this.categoryService.deleteCategory(cat.id).subscribe({
+        next: () => this.showSuccess('Categoría eliminada.')
       });
     }
   }

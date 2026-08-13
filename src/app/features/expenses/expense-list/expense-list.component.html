@@ -1,16 +1,22 @@
-<div class="container-fluid py-4 rm-page-enter">
+<div class="container-fluid p-0 rm-page-enter">
   
   <!-- Header & New Expense Button -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
     <div>
       <h1 class="rm-page-title">Egresos y Mantenimientos</h1>
       <p class="text-muted small mb-0">Controla los gastos operativos, servicios de mantenimiento preventivo y reparaciones de activos</p>
     </div>
 
-    <button class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm" (click)="openExpenseModal()">
-      <i class="bi bi-tools"></i>
-      <span>Registrar Egreso</span>
-    </button>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm" (click)="openCatModal()">
+        <i class="bi bi-tag"></i>
+        <span>Tipos de Gasto</span>
+      </button>
+      <button class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm" (click)="openExpenseModal()">
+        <i class="bi bi-tools"></i>
+        <span>Registrar Egreso</span>
+      </button>
+    </div>
   </div>
 
   <!-- Monthly Summary Cards -->
@@ -85,9 +91,14 @@
         </div>
         <h5>No hay egresos registrados</h5>
         <p class="text-muted small">Registra los mantenimientos y compras para llevar tu balance de utilidades al día.</p>
-        <button class="btn btn-primary" (click)="openExpenseModal()">
-          Registrar Egreso
-        </button>
+        <div class="d-flex justify-content-center gap-2">
+          <button class="btn btn-outline-secondary" (click)="openCatModal()">
+            Gestionar Tipos de Gasto
+          </button>
+          <button class="btn btn-primary" (click)="openExpenseModal()">
+            Registrar Egreso
+          </button>
+        </div>
       </div>
     </div>
   }
@@ -198,125 +209,188 @@
             
             <!-- Type -->
             <div class="mb-3">
-              <label for="exp-type" class="form-label small fw-semibold text-dark">Tipo de Gasto *</label>
-              <select id="exp-type" formControlName="type" class="form-select">
-                <option value="maintenance">Mantenimiento preventivo</option>
-                <option value="repair">Reparación o correctivo</option>
-                <option value="purchase">Adquisición de insumo/activo</option>
-                <option value="other">Otro gasto operativo</option>
+              <label class="form-label small fw-semibold text-dark">Clasificación General</label>
+              <select formControlName="type" class="form-select bg-light border-0">
+                <option value="maintenance">🔧 Mantenimiento preventivo</option>
+                <option value="repair">🚨 Reparación y correctivo</option>
+                <option value="purchase">📦 Adquisición de insumo/activo</option>
+                <option value="other">💼 Otro gasto operativo</option>
               </select>
             </div>
 
             <!-- Asset (Optional) -->
             <div class="mb-3">
-              <label for="exp-asset" class="form-label small fw-semibold text-dark">Activo Relacionado (Opcional)</label>
-              <select id="exp-asset" formControlName="asset_id" class="form-select">
-                <option [ngValue]="null">Gasto General / Ninguno</option>
+              <label class="form-label small fw-semibold text-dark">Activo Relacionado (Opcional)</label>
+              <select formControlName="asset_id" class="form-select bg-light border-0">
+                <option [ngValue]="null">Gasto General del Negocio (Sin activo asignado)</option>
                 @for (a of assets(); track a.id) {
-                  <option [value]="a.id">{{ a.name }}</option>
+                  <option [value]="a.id">{{ a.name }} {{ a.serial_number ? '(' + a.serial_number + ')' : '' }}</option>
                 }
               </select>
             </div>
 
-            <!-- Category -->
+            <!-- Category (Selector desde el catálogo personalizado) -->
             <div class="mb-3">
-              <label for="exp-cat" class="form-label small fw-semibold text-dark">Categoría / Concepto *</label>
-              <input
-                type="text"
-                id="exp-cat"
-                formControlName="category"
-                class="form-control"
-                placeholder="Ej. Servicio mecánico, Limpieza, Combustible"
-              />
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label small fw-semibold text-dark mb-0">Tipo / Concepto de Gasto</label>
+                <button type="button" class="btn btn-link btn-sm text-primary p-0 text-decoration-none extra-small" (click)="openCatModal()">
+                  <i class="bi bi-plus-lg me-1"></i>+ Crear Tipo de Gasto
+                </button>
+              </div>
+              <select formControlName="category" class="form-select bg-light border-0">
+                @for (cat of categories(); track cat.id) {
+                  <option [value]="cat.name">{{ cat.name }}</option>
+                }
+              </select>
             </div>
 
             <!-- Description -->
             <div class="mb-3">
-              <label for="exp-desc" class="form-label small fw-semibold text-dark">Descripción Detallada *</label>
+              <label class="form-label small fw-semibold text-dark">Detalle / Descripción</label>
               <input
                 type="text"
-                id="exp-desc"
                 formControlName="description"
-                class="form-control"
-                placeholder="Ej. Cambio de bujías y cambio de aceite de motor"
+                class="form-control bg-light border-0"
+                placeholder="Ej. Afinación mayor, 4 llantas nuevas, gasolina camioneta"
               />
             </div>
 
-            <!-- Amount -->
-            <div class="mb-3">
-              <label for="exp-amt" class="form-label small fw-semibold text-dark">Monto Gastado ($ MXN) *</label>
-              <div class="input-group">
-                <span class="input-group-text bg-light text-muted">$</span>
+            <!-- Amount & Date -->
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-dark">Monto (MXN)</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-0 text-muted">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    formControlName="amount"
+                    class="form-control bg-light border-0"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-dark">Fecha del Gasto</label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  id="exp-amt"
-                  formControlName="amount"
-                  class="form-control"
-                  placeholder="0.00"
+                  type="date"
+                  formControlName="expense_date"
+                  class="form-control bg-light border-0"
                 />
               </div>
             </div>
 
             <!-- Vendor -->
             <div class="mb-3">
-              <label for="exp-vendor" class="form-label small fw-semibold text-dark">Proveedor / Taller</label>
+              <label class="form-label small fw-semibold text-dark">Proveedor / Taller (Opcional)</label>
               <input
                 type="text"
-                id="exp-vendor"
                 formControlName="vendor"
-                class="form-control"
-                placeholder="Ej. Taller Mecánico San Juan"
-              />
-            </div>
-
-            <!-- Date -->
-            <div class="mb-3">
-              <label for="exp-dt" class="form-label small fw-semibold text-dark">Fecha del Gasto *</label>
-              <input
-                type="date"
-                id="exp-dt"
-                formControlName="expense_date"
-                class="form-control"
+                class="form-control bg-light border-0"
+                placeholder="Ej. Taller Mecánico Hnos. López, Pemex, Autozone"
               />
             </div>
 
             <!-- Receipt File -->
             <div class="mb-3">
-              <label for="exp-file" class="form-label small fw-semibold text-dark">Comprobante / Factura (Opcional)</label>
+              <label class="form-label small fw-semibold text-dark">Comprobante o Nota de Venta (Opcional)</label>
               <input
                 type="file"
-                id="exp-file"
+                class="form-control bg-light border-0"
                 (change)="onFileSelected($event)"
-                accept="image/*,.pdf"
-                class="form-control"
+                accept="image/*,application/pdf"
               />
               @if (receiptPreview()) {
                 <div class="mt-2 text-center">
-                  <img [src]="receiptPreview()" alt="Preview" class="img-thumbnail" style="max-height: 120px;" />
+                  <img [src]="receiptPreview()" class="img-thumbnail rounded-3" style="max-height: 120px;" alt="Vista previa de comprobante" />
                 </div>
               }
             </div>
 
           </div>
 
-          <div class="modal-footer border-0 bg-light p-3">
+          <div class="modal-footer border-0 p-4 pt-0">
             <button type="button" class="btn btn-light" (click)="closeModal()">Cancelar</button>
-            <button
-              type="submit"
-              class="btn btn-primary px-4 fw-semibold shadow-sm"
-              [disabled]="saving()"
-            >
+            <button type="submit" class="btn btn-primary fw-semibold" [disabled]="expenseForm.invalid || saving()">
               @if (saving()) {
-                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                <span>Guardando...</span>
+                <span class="spinner-border spinner-border-sm me-2"></span> Guardando...
               } @else {
-                <span>Registrar Egreso</span>
+                <span>Guardar Egreso</span>
               }
             </button>
           </div>
         </form>
+
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Expense Categories Catalog Modal -->
+@if (isCatModalOpen()) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.6);" (click)="closeCatModal()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+        
+        <div class="modal-header border-0 bg-light p-4">
+          <h5 class="modal-title fw-bold text-dark mb-0">Catálogo de Tipos de Gasto</h5>
+          <button type="button" class="btn-close" (click)="closeCatModal()"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          
+          <!-- Formularios para crear nuevo tipo de gasto -->
+          <form [formGroup]="newCategoryForm" (ngSubmit)="saveCategory()" class="mb-4 p-3 bg-light rounded-3 border">
+            <h6 class="fw-bold text-dark mb-2">Crear Nuevo Tipo de Gasto</h6>
+            <div class="row g-2">
+              <div class="col-12 col-sm-8">
+                <input
+                  type="text"
+                  formControlName="name"
+                  class="form-control form-control-sm"
+                  placeholder="Ej: Impuestos, Cargas de Gasolina, Refacciones"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold" [disabled]="newCategoryForm.invalid">
+                  <i class="bi bi-plus-circle me-1"></i> Guardar
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Lista de categorías existentes -->
+          <h6 class="fw-bold text-dark mb-2">Tipos de Gasto Registrados</h6>
+          <div class="list-group list-group-flush rounded-3 border" style="max-height: 260px; overflow-y: auto;">
+            @for (cat of categories(); track cat.id) {
+              <div class="list-group-item d-flex align-items-center justify-content-between py-2">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-primary-subtle text-primary p-2 rounded-circle">
+                    <i class="bi {{ cat.icon || 'bi-tag' }}"></i>
+                  </span>
+                  <div>
+                    <div class="fw-semibold text-dark small">{{ cat.name }}</div>
+                    @if (cat.description) {
+                      <small class="text-muted extra-small">{{ cat.description }}</small>
+                    }
+                  </div>
+                </div>
+                @if (cat.user_id) {
+                  <button class="btn btn-outline-danger btn-sm rounded-circle" (click)="deleteCategory(cat, $event)" title="Eliminar tipo">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                } @else {
+                  <span class="badge bg-light text-muted border extra-small">Sistema</span>
+                }
+              </div>
+            }
+          </div>
+
+        </div>
+
+        <div class="modal-footer border-0 p-4 pt-0">
+          <button type="button" class="btn btn-secondary w-100" (click)="closeCatModal()">Cerrar</button>
+        </div>
 
       </div>
     </div>

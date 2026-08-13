@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectionStrategy, signal, inject } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ExpenseService } from '../services/expense.service';
+import { ExpenseCategoryService, ExpenseCategoryItem } from '../services/expense-category.service';
 import { AssetService } from '../../assets/services/asset.service';
 import { CurrencyMxnPipe } from '../../../shared/pipes/currency-mxn.pipe';
 import type { Asset, Expense } from '../../../shared/models';
@@ -17,15 +18,18 @@ import type { Asset, Expense } from '../../../shared/models';
 export class ExpenseListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   readonly expenseService = inject(ExpenseService);
+  readonly categoryService = inject(ExpenseCategoryService);
   readonly assetService = inject(AssetService);
 
   readonly expenses = this.expenseService.expenses;
   readonly summary = this.expenseService.summary;
   readonly loading = this.expenseService.loading;
+  readonly categories = this.categoryService.categories;
   readonly assets = this.assetService.assets;
 
   readonly selectedType = signal<string>('');
   readonly isModalOpen = signal(false);
+  readonly isCatModalOpen = signal(false);
   readonly saving = signal(false);
   readonly selectedReceipt = signal<File | null>(null);
   readonly receiptPreview = signal<string | null>(null);
@@ -40,9 +44,15 @@ export class ExpenseListComponent implements OnInit {
     type: ['maintenance', [Validators.required]],
   });
 
+  readonly newCategoryForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.maxLength(100)]],
+    description: [''],
+  });
+
   ngOnInit(): void {
     this.expenseService.loadSummary().subscribe();
     this.expenseService.loadExpenses().subscribe();
+    this.categoryService.loadCategories().subscribe();
     this.assetService.loadAssets().subscribe();
   }
 
@@ -57,7 +67,7 @@ export class ExpenseListComponent implements OnInit {
     this.receiptPreview.set(null);
     this.expenseForm.reset({
       asset_id: null,
-      category: '',
+      category: this.categories().length > 0 ? this.categories()[0].name : 'Mantenimiento Preventivo',
       description: '',
       amount: 0,
       expense_date: new Date().toISOString().split('T')[0],
@@ -69,6 +79,32 @@ export class ExpenseListComponent implements OnInit {
 
   closeModal(): void {
     this.isModalOpen.set(false);
+  }
+
+  openCatModal(): void {
+    this.newCategoryForm.reset();
+    this.isCatModalOpen.set(true);
+  }
+
+  closeCatModal(): void {
+    this.isCatModalOpen.set(false);
+  }
+
+  saveCategory(): void {
+    if (this.newCategoryForm.invalid) return;
+    this.categoryService.createCategory(this.newCategoryForm.value).subscribe({
+      next: (res) => {
+        this.newCategoryForm.reset();
+        this.expenseForm.patchValue({ category: res.data.name });
+      }
+    });
+  }
+
+  deleteCategory(cat: ExpenseCategoryItem, event: Event): void {
+    event.stopPropagation();
+    if (confirm(`¿Eliminar la categoría de egreso "${cat.name}"?`)) {
+      this.categoryService.deleteCategory(cat.id).subscribe();
+    }
   }
 
   onFileSelected(event: Event): void {
