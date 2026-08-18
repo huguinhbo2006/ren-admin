@@ -150,6 +150,7 @@ export interface Asset {
   weekly_rate_cents: number;
   monthly_rate_cents: number;
   deposit_cents: number;
+  initial_investment_cents?: number;
   status: AssetStatus;
   location: string | null;
   notes: string | null;
@@ -168,6 +169,7 @@ export interface AssetForm {
   weekly_rate_cents: number;
   monthly_rate_cents: number;
   deposit_cents: number;
+  initial_investment_cents: number;
   status: AssetStatus;
   location: string;
   notes: string;

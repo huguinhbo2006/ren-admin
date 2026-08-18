@@ -49,9 +49,12 @@ export interface AssetUtilizationReport {
 
 export interface AssetRoiReport {
   total_assets: number;
-  total_revenue_cents: number;
+  total_initial_investment_cents: number;
   total_expense_cents: number;
+  total_investment_cents: number;
+  total_revenue_cents: number;
   total_net_profit_cents: number;
+  total_remaining_to_recover_cents: number;
   items: {
     id: number;
     name: string;
@@ -59,11 +62,14 @@ export interface AssetRoiReport {
     category_name: string;
     status: string;
     daily_rate_cents: number;
+    initial_investment_cents: number;
     rentals_count: number;
     total_days_rented: number;
     total_revenue_cents: number;
     total_expense_cents: number;
+    total_investment_cents: number;
     net_profit_cents: number;
+    remaining_to_recover_cents: number;
     roi_margin_pct: number;
   }[];
 }

@@ -189,6 +189,28 @@
               </div>
             </div>
 
+            <!-- Inversión Inicial / Costo de Adquisición o Contratación -->
+            <div class="col-12">
+              <label for="initial-investment" class="form-label small fw-semibold text-dark">
+                Inversión Inicial / Costo Adquisición o Contratación ($ MXN)
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted"><i class="bi bi-piggy-bank"></i></span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="initial-investment"
+                  formControlName="initial_investment"
+                  class="form-control"
+                  placeholder="0.00"
+                />
+              </div>
+              <small class="text-muted">
+                Costo inicial de compra o contratación (utilizado para calcular el ROI exacto en reportes).
+              </small>
+            </div>
+
           </div>
         </div>
 
